@@ -81,7 +81,7 @@ export default function Login() {
 
       {/* Redirect to Signup */}
       <Pressable
-        onPress={() => router.push("/(auth)/signUp")}
+        onPress={() => router.push("/signup")}
         className="mt-6 items-center"
       >
         <Text className="text-gray-600">

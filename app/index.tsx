@@ -20,6 +20,9 @@ export default function Index() {
       <Link href="/(auth)/login" className="text-blue-500">
       Go to Login
       </Link>
+      <Link href="/(auth)/signup" className="text-blue-500">
+      Go to Signup
+      </Link>
     </View>
    
   );

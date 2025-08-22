@@ -6,9 +6,9 @@ export default function AuthLayout() {
     // const {isAuthenticated, isLoading} = useAuth()
   return (
     <Stack screenOptions={{headerShown: false}}>
-      {/* <Stack.Screen name='welcome'/>
+       <Stack.Screen name='welcome'/> 
       <Stack.Screen name='login'/>
-      <Stack.Screen name='registry'/> */}
+      <Stack.Screen name='signup'/>
     </Stack>
   )
 }
