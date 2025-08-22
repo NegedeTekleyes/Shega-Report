@@ -3,13 +3,30 @@ import React from 'react'
 import { Stack } from 'expo-router'
 
 export default function AuthLayout() {
-    // const {isAuthenticated, isLoading} = useAuth()
   return (
-    <Stack screenOptions={{headerShown: false}}>
-       <Stack.Screen name='welcome'/> 
-      <Stack.Screen name='login'/>
-      <Stack.Screen name='signup'/>
-    </Stack>
+
+    <View className='flex-1 bg-white'>
+<Stack
+screenOptions={{
+  headerStyle: {backgroundColor: '#16a34a'},
+  // headerTintColor: #ffffffff,
+  headerTitleStyle: {fontWeight: "bold"},
+}}
+>
+  <Stack.Screen
+  name='login'
+  options={{title: "Login"}}
+  />
+  <Stack.Screen
+  name='signup'
+  options={{title: "Sign Up"}}
+  />
+
+  
+
+</Stack>
+    </View>
+    
   )
 }
 
