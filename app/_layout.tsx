@@ -1,14 +1,27 @@
-import { Stack } from "expo-router";
+import { SplashScreen, Stack } from "expo-router";
 import './global.css'
+import { useEffect } from "react";
+// import Auth from "@/providers/auth-provider";
+// import { LanguageProvider } from "@/providers/language-provider";
 export default function RootLayout() {
-  return <Stack>
-    <Stack.Screen 
-    name="(tabs)"
-    options={{headerShown: false }}
-    />
+ useEffect(()=>{
+  SplashScreen.hideAsync()
+ }, [])
+
+ return (
+  <Stack>
     <Stack.Screen
-    name="movies/[id]"
-    options={{headerShown: false}}
-    />  
-    </Stack>
+    name="index"
+    options={{
+        headerShown: false,
+        title: "Home"
+    }}/>
+    <Stack.Screen
+    name="(auth)/login"
+    options={{
+        headerShown: true,
+        title: 'Login'
+    }} />
+  </Stack>
+ )
 }
