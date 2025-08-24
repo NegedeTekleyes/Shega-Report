@@ -4,13 +4,55 @@ import * as SecureStore from "expo-secure-store";
 // Supported languages
 export type Language = "en" | "am";
 
-// Translation keys
+// Extended translation keys
 export const translations = {
   welcome: { en: "Welcome to ShegaReport", am: "እንኳን ወደ ሸጋሪፖርት በደህና መጡ" },
   login: { en: "Login", am: "ግባ" },
+   pleaseFillAll: { 
+    en: "Please fill all fields", 
+    am: "እባክዎ ሁሉንም መስኮች ይሙሉ" 
+  },
+   passwordsDontMatch: { 
+    en: "Passwords do not match", 
+    am: "የይለፍ ቃላት አይጣጣሙም" 
+  },
+  passwordTooShort: { 
+    en: "Password must be at least 6 characters", 
+    am: "የይለፍ ቃል ቢያንስ 6 ቁምፊዎች ሊኖሩት ይገባል" 
+  },
+  signupSuccess: { 
+    en: "Signup Success", 
+    am: "በተሳካ ሁኔታ ተመዝግበዋል" 
+  },
+   signupError: { 
+    en: "Signup failed. Please try again.", 
+    am: "ምዝገባ አልተሳካም። እባክዎ ደግሞ ይሞክሩ።" 
+  },
+  createAccount: { 
+    en: "Create Account", 
+    am: "መለያ ይፍጠሩ" 
+  },
+  joinOurCommunity: { 
+    en: "Join our water management community", 
+    am: "ወደ ውሃ አስተዳደር ማህበረሰባችን ይቀላቀሉ" 
+  },
   register: { en: "Sign Up", am: "ተመዝገብ" },
+  fullName: {en: 'Full name', am: 'ሙሉ ስም'},
+  enterFullName: {en: 'Enter Full Name', am: 'ሙሉ ስም ያስግቡ'},
   email: { en: "Email", am: "ኢሜይል" },
   password: { en: "Password", am: "የይለፍ ቃል" },
+  confirmPassword: {en: 'Confirm Password', am: 'የይለፍ ቃል ያረጋግጡ'},
+  enterEmail: { en: "Enter your email", am: "ኢሜይልዎን ያስገቡ" },
+  enterPassword: { en: "Enter your password", am: "የይለፍ ቃልዎን ያስገቡ" },
+  dontHaveAccount: { en: "Don't have an account?", am: "መለያ የሎትም?" },
+  signUp: { en: "Sign up", am: "ተመዝገብ" },
+  welcomeBack: { en: "Welcome back", am: "እንኳን በደህና መጡ" },
+  pleaseEnterBoth: { en: "Please enter both email and password", am: "እባክዎ ኢሜይል እና የይለፍ ቃል ያስገቡ" },
+  loginError: { en: "Login failed. Please try again.", am: "ግባት አልተሳካም። እባክዎ ደግሞ ይሞክሩ።" },
+  loading: {en: 'loading plase wait', am: 'እባኮ ይታገሱ'},
+  alreadyHaveAccount: {en: 'Already Have Account', am: "ቀድሞውኑ መለያ አሎት?"},
+  creatingAccount: {en: 'Create account', am: "በመጫን ላይ"}
+  // Add more translations as needed
 };
 
 export type TranslationKey = keyof typeof translations;
@@ -23,15 +65,14 @@ interface LanguageContextProps {
 }
 
 // Create context
-const LanguageContext = createContext<LanguageContextProps | undefined>(
-  undefined
-);
+const LanguageContext = createContext<LanguageContextProps | undefined>(undefined);
 
 // Provider component
 export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [language, setLanguage] = useState<Language>("en");
+  const [isLoading, setIsLoading] = useState(true)
 
   // Load saved language from SecureStore
   useEffect(() => {
@@ -43,6 +84,8 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({
         }
       } catch (error) {
         console.error("Error loading language:", error);
+      } finally{
+        setIsLoading(false)
       }
     })();
   }, []);
@@ -61,6 +104,10 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({
   const t = (key: TranslationKey) => {
     return translations[key]?.[language] || key;
   };
+  // dont rennder children until language is loaded
+  if (isLoading) {
+    return null
+  }
 
   return (
     <LanguageContext.Provider value={{ language, changeLanguage, t }}>
