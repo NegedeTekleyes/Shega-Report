@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PostgreSQL Connection Debugger</title>
+    <style>
+        :root {
+            --primary: #336791;
+            --secondary: #2c3e50;
+            --success: #27ae60;
+            --warning: #f39c12;
+            --danger: #e74c3c;
+            --light: #ecf0f1;
+            --dark: #2c3e50;
+            --gray: #95a5a6;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: var(--dark);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: var(--gray);
+            font-size: 1.2rem;
+        }
+        
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card-title {
+            font-size: 1.2rem;
+            color: var(--primary);
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--light);
+        }
+        
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .status-dot {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        
+        .connected {
+            background-color: var(--success);
+        }
+        
+        .error {
+            background-color: var(--danger);
+        }
+        
+        .warning {
+            background-color: var(--warning);
+        }
+        
+        .code-block {
+            background: #2d3436;
+            color: #dfe6e9;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+            margin: 15px 0;
+            line-height: 1.5;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .btn:hover {
+            background: #285680;
+            transform: translateY(-2px);
+        }
+        
+        .solution-list {
+            list-style-type: none;
+        }
+        
+        .solution-list li {
+            padding: 10px 0;
+            border-bottom: 1px solid var(--light);
+        }
+        
+        .solution-list li:last-child {
+            border-bottom: none;
+        }
+        
+        .log-output {
+            height: 200px;
+            overflow-y: auto;
+            background: #2d3436;
+            color: #dfe6e9;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .log-entry {
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+        }
+        
+        .timestamp {
+            color: #636e72;
+        }
+        
+        .error-message {
+            color: #ff7675;
+        }
+        
+        .success-message {
+            color: #55efc4;
+        }
+        
+        .warning-message {
+            color: #fdcb6e;
+        }
+        
+        .tab-container {
+            margin-top: 20px;
+        }
+        
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid var(--light);
+            margin-bottom: 15px;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+        }
+        
+        .tab.active {
+            border-bottom: 3px solid var(--primary);
+            color: var(--primary);
+            font-weight: 500;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .connection-form {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--light);
+            border-radius: 5px;
+        }
+        
+        .full-width {
+            grid-column: 1 / -1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>PostgreSQL Connection Debugger</h1>
+            <p class="subtitle">Diagnose and resolve database connection issues</p>
+        </header>
+        
+        <div class="dashboard">
+            <div class="card">
+                <h2 class="card-title">Connection Status</h2>
+                <div class="status-indicator">
+                    <div class="status-dot error"></div>
+                    <span>Connection Error - Cannot destructure property 'title' of 'req.body'</span>
+                </div>
+                <p>The server is running but encountering issues with request body parsing.</p>
+                
+                <h3 class="card-title" style="margin-top: 20px;">Error Details</h3>
+                <div class="code-block">
+// Error Stack Trace<br>
+TypeError: Cannot destructure property 'title' of 'req.body' as it is undefined.<br>
+    at createReport (D:\Project\BackendSR\src\controllers\reportController.ts:7:12)<br>
+    at Layer.handleRequest (D:\Project\BackendSR\node_modules\router\lib\layer.js:152:17)
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2 class="card-title">Quick Solutions</h2>
+                <ul class="solution-list">
+                    <li><strong>1. Add Body Parsing Middleware</strong> - Ensure express.json() is used before routes</li>
+                    <li><strong>2. Check Request Headers</strong> - Verify Content-Type: application/json</li>
+                    <li><strong>3. Validate Request Body</strong> - Add proper validation in your controller</li>
+                    <li><strong>4. Update Controller Code</strong> - Add error handling for missing body</li>
+                </ul>
+                <button class="btn" style="margin-top: 20px;">View Detailed Solutions</button>
+            </div>
+            
+            <div class="card">
+                <h2 class="card-title">Connection Test</h2>
+                <p>Test your PostgreSQL connection with current settings:</p>
+                
+                <div class="connection-form">
+                    <div class="form-group">
+                        <label for="host">Host</label>
+                        <input type="text" id="host" value="192.168.1.4">
+                    </div>
+                    <div class="form-group">
+                        <label for="port">Port</label>
+                        <input type="text" id="port" value="3001">
+                    </div>
+                    <div class="form-group">
+                        <label for="database">Database</label>
+                        <input type="text" id="database" value="BackendSR">
+                    </div>
+                    <div class="form-group">
+                        <label for="username">Username</label>
+                        <input type="text" id="username" value="postgres">
+                    </div>
+                    <div class="form-group full-width">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" value="********">
+                    </div>
+                </div>
+                
+                <button class="btn" style="margin-top: 10px;">Test Connection</button>
+                
+                <div class="log-output">
+                    <div class="log-entry"><span class="timestamp">[12:34:56]</span> <span class="warning-message">Waiting to test connection...</span></div>
+                    <div class="log-entry"><span class="timestamp">[12:34:52]</span> <span class="error-message">Error: Cannot destructure property 'title' of 'req.body'</span></div>
+                    <div class="log-entry"><span class="timestamp">[12:34:48]</span> <span class="success-message">Server is running on port 3001</span></div>
+                    <div class="log-entry"><span class="timestamp">[12:34:45]</span> <span class="success-message">PostgreSQL connection test successful</span></div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2 class="card-title">Code Fix Recommendations</h2>
+                
+                <div class="tab-container">
+                    <div class="tabs">
+                        <div class="tab active">Server Configuration</div>
+                        <div class="tab">Controller Fix</div>
+                        <div class="tab">Middleware Setup</div>
+                    </div>
+                    
+                    <div class="tab-content active">
+                        <p>Ensure your server.js includes body parsing middleware before routes:</p>
+                        <div class="code-block">
+// Add these lines before defining routes<br>
+const express = require('express');<br>
+const app = express();<br>
+<br>
+// Body parsing middleware<br>
+app.use(express.json());<br>
+app.use(express.urlencoded({ extended: true }));<br>
+<br>
+// Then define your routes<br>
+app.use('/api/reports', reportRoutes);
+                        </div>
+                    </div>
+                    
+                    <div class="tab-content">
+                        <p>Update your reportController.ts to handle missing request body:</p>
+                        <div class="code-block">
+export const createReport = async (req: Request, res: Response) => {<br>
+  &nbsp;&nbsp;try {<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;// Check if req.body exists<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;if (!req.body || Object.keys(req.body).length === 0) {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return res.status(400).json({<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;success: false,<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;message: 'Request body is missing'<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;});<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+    <br>
+    &nbsp;&nbsp;&nbsp;&nbsp;const { title, description, category, location } = req.body;<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;// Rest of your controller code<br>
+  &nbsp;&nbsp;} catch (error) {<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;// Error handling<br>
+  &nbsp;&nbsp;}<br>
+};
+                        </div>
+                    </div>
+                    
+                    <div class="tab-content">
+                        <p>Check your middleware order to ensure proper parsing:</p>
+                        <div class="code-block">
+// Correct middleware order<br>
+app.use(express.json());<br>
+app.use(express.urlencoded({ extended: true }));<br>
+app.use(cors());<br>
+<br>
+// Routes should be defined after body parsing middleware<br>
+app.use('/api/auth', authRoutes);<br>
+app.use('/api/reports', reportRoutes);<br>
+app.use('/api/compliance', complianceRoutes);<br>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tab functionality
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                // Remove active class from all tabs and content
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                
+                // Add active class to clicked tab
+                tab.classList.add('active');
+                
+                // Activate corresponding content (simplified for demo)
+                const index = Array.from(tab.parentNode.children).indexOf(tab);
+                document.querySelectorAll('.tab-content')[index].classList.add('active');
+            });
+        });
+        
+        // Simulate connection test
+        document.querySelectorAll('.btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const logOutput = document.querySelector('.log-output');
+                const newEntry = document.createElement('div');
+                newEntry.className = 'log-entry';
+                newEntry.innerHTML = `<span class="timestamp">[${new Date().toLocaleTimeString()}]</span> <span class="success-message">Testing connection to PostgreSQL database...</span>`;
+                logOutput.prepend(newEntry);
+            });
+        });
+    </script>
+</body>
+</html>
