@@ -1,11 +1,10 @@
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Linking } from 'react-native'
 import React from 'react'
 import { Ionicons } from '@expo/vector-icons'
-import { useTheme } from '@/providers/theme-provider'
+import { useRouter } from 'expo-router'
 
 export default function SupportScreen() {
-  const { theme } = useTheme()
-
+  const router = useRouter()
   const handleEmailSupport = () => {
     Linking.openURL('mailto:support@shegareport.com?subject=Support Request')
   }
@@ -15,243 +14,164 @@ export default function SupportScreen() {
   }
 
   const openFAQ = () => {
-    // Would typically navigate to FAQ screen
     Linking.openURL('https://shegareport.com/faq')
   }
 
   const openHelpCenter = () => {
-    // Would typically navigate to Help Center
     Linking.openURL('https://shegareport.com/help')
   }
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      {/* Header */}
-      <View style={[styles.header, { backgroundColor: theme.colors.card }]}>
-        <Text style={[styles.headerTitle, { color: theme.colors.text }]}>Support</Text>
-        <Text style={[styles.headerSubtitle, { color: theme.colors.textSecondary }]}>
+    <ScrollView className="flex-1 bg-gray-400">
+      {/* Header */}       
+      <View className="bg-[#0a5398ff] px-6 pt-12 pb-4 shadow-sm">
+        <TouchableOpacity onPress={() => router.push("/(tabs)/settings")} className="mr-4">
+            <Ionicons name='arrow-back' size={24} color='white'/>
+         </TouchableOpacity>
+         <View className=' ml-6'>
+        <Text className="text-2xl font-bold text-white mb-2 mr-6">Support</Text>
+        <Text className="text-lg text-gray-200">
           We're here to help you
         </Text>
+         </View>
       </View>
+        
 
       {/* Contact Methods */}
-      <View style={[styles.section, { backgroundColor: theme.colors.card }]}>
-        <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Contact Us</Text>
+      <View className="bg-[#15bdc6ff] mx-4 my-4 rounded-xl shadow-sm p-4">
+        <Text className="text-xl font-semibold text-gray-900 mb-4">Contact Us</Text>
         
         <TouchableOpacity 
-          style={[styles.contactOption, { borderBottomColor: theme.colors.border }]}
+          className="flex-row items-center py-4 border-b border-gray-100"
           onPress={handleEmailSupport}
         >
-          <View style={styles.contactIcon}>
-            <Ionicons name="mail" size={24} color={theme.colors.primary} />
+          <View className="w-10 items-center mr-3">
+            <Ionicons name="mail" size={24} color="#0a5398" />
           </View>
-          <View style={styles.contactText}>
-            <Text style={[styles.contactTitle, { color: theme.colors.text }]}>Email Support</Text>
-            <Text style={[styles.contactDescription, { color: theme.colors.textSecondary }]}>
+          <View className="flex-1">
+            <Text className="text-base font-medium text-gray-900 mb-1">Email Support</Text>
+            <Text className="text-sm text-gray-600">
               Get help via email
             </Text>
           </View>
-          <Ionicons name="chevron-forward" size={20} color={theme.colors.textSecondary} />
+          <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
         </TouchableOpacity>
 
         <TouchableOpacity 
-          style={[styles.contactOption, { borderBottomColor: theme.colors.border }]}
+          className="flex-row items-center py-4 border-b border-gray-100"
           onPress={handleCallSupport}
         >
-          <View style={styles.contactIcon}>
-            <Ionicons name="call" size={24} color={theme.colors.primary} />
+          <View className="w-10 items-center mr-3">
+            <Ionicons name="call" size={24} color="#0a5398" />
           </View>
-          <View style={styles.contactText}>
-            <Text style={[styles.contactTitle, { color: theme.colors.text }]}>Call Support</Text>
-            <Text style={[styles.contactDescription, { color: theme.colors.textSecondary }]}>
+          <View className="flex-1">
+            <Text className="text-base font-medium text-gray-900 mb-1">Call Support</Text>
+            <Text className="text-sm text-gray-600">
               +1 (234) 567-890
             </Text>
           </View>
-          <Ionicons name="chevron-forward" size={20} color={theme.colors.textSecondary} />
+          <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
         </TouchableOpacity>
 
         <TouchableOpacity 
-          style={styles.contactOption}
+          className="flex-row items-center py-4"
           onPress={openFAQ}
         >
-          <View style={styles.contactIcon}>
-            <Ionicons name="help-circle" size={24} color={theme.colors.primary} />
+          <View className="w-10 items-center mr-3">
+            <Ionicons name="help-circle" size={24} color="#0a5398" />
           </View>
-          <View style={styles.contactText}>
-            <Text style={[styles.contactTitle, { color: theme.colors.text }]}>FAQ</Text>
-            <Text style={[styles.contactDescription, { color: theme.colors.textSecondary }]}>
+          <View className="flex-1">
+            <Text className="text-base font-medium text-gray-900 mb-1">FAQ</Text>
+            <Text className="text-sm text-gray-600">
               Frequently asked questions
             </Text>
           </View>
-          <Ionicons name="chevron-forward" size={20} color={theme.colors.textSecondary} />
+          <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
         </TouchableOpacity>
       </View>
 
       {/* Help Resources */}
-      <View style={[styles.section, { backgroundColor: theme.colors.card }]}>
-        <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Help Resources</Text>
+      <View className="bg-[#15bdc6ff] mx-4 my-4 rounded-xl shadow-sm p-4">
+        <Text className="text-xl font-semibold text-gray-900 mb-4">Help Resources</Text>
         
         <TouchableOpacity 
-          style={[styles.resourceOption, { borderBottomColor: theme.colors.border }]}
+          className="flex-row items-center py-4 border-b border-gray-100"
           onPress={openHelpCenter}
         >
-          <View style={styles.resourceIcon}>
-            <Ionicons name="book" size={24} color={theme.colors.primary} />
+          <View className="w-10 items-center mr-3">
+            <Ionicons name="book" size={24} color="#0a5398" />
           </View>
-          <Text style={[styles.resourceText, { color: theme.colors.text }]}>Help Center</Text>
-          <Ionicons name="chevron-forward" size={20} color={theme.colors.textSecondary} />
+          <Text className="flex-1 text-base font-medium text-gray-900">Help Center</Text>
+          <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
         </TouchableOpacity>
 
         <TouchableOpacity 
-          style={[styles.resourceOption, { borderBottomColor: theme.colors.border }]}
+          className="flex-row items-center py-4 border-b border-gray-100"
           onPress={() => Linking.openURL('https://shegareport.com/guides')}
         >
-          <View style={styles.resourceIcon}>
-            <Ionicons name="document-text" size={24} color={theme.colors.primary} />
+          <View className="w-10 items-center mr-3">
+            <Ionicons name="document-text" size={24} color="#0a5398" />
           </View>
-          <Text style={[styles.resourceText, { color: theme.colors.text }]}>User Guides</Text>
-          <Ionicons name="chevron-forward" size={20} color={theme.colors.textSecondary} />
+          <Text className="flex-1 text-base font-medium text-gray-900">User Guides</Text>
+          <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
         </TouchableOpacity>
 
         <TouchableOpacity 
-          style={styles.resourceOption}
+          className="flex-row items-center py-4"
           onPress={() => Linking.openURL('https://shegareport.com/community')}
         >
-          <View style={styles.resourceIcon}>
-            <Ionicons name="people" size={24} color={theme.colors.primary} />
+          <View className="w-10 items-center mr-3">
+            <Ionicons name="people" size={24} color="#0a5398" />
           </View>
-          <Text style={[styles.resourceText, { color: theme.colors.text }]}>Community Forum</Text>
-          <Ionicons name="chevron-forward" size={20} color={theme.colors.textSecondary} />
+          <Text className="flex-1 text-base font-medium text-gray-900">Community Forum</Text>
+          <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
         </TouchableOpacity>
       </View>
 
+      {/* Business Hours */}
+      <View className="bg-[#15bdc6ff] mx-4 my-4 rounded-xl shadow-sm p-4">
+        <Text className="text-xl font-semibold text-gray-900 mb-4">Business Hours</Text>
+        
+        <View className="space-y-3">
+          <View className="flex-row justify-between items-center py-2">
+            <Text className="text-base text-gray-700">Monday - Friday</Text>
+            <Text className="text-base font-medium text-gray-900">9:00 AM - 6:00 PM</Text>
+          </View>
+          
+          <View className="flex-row justify-between items-center py-2">
+            <Text className="text-base text-gray-700">Saturday</Text>
+            <Text className="text-base font-medium text-gray-900">10:00 AM - 4:00 PM</Text>
+          </View>
+          
+          <View className="flex-row justify-between items-center py-2">
+            <Text className="text-base text-gray-700">Sunday</Text>
+            <Text className="text-base font-medium text-gray-900">Closed</Text>
+          </View>
+        </View>
+      </View>
+
       {/* Emergency Contact */}
-      <View style={[styles.emergencySection, { backgroundColor: '#FEF2F2' }]}>
-        <Ionicons name="warning" size={24} color="#DC2626" />
-        <Text style={styles.emergencyTitle}>Emergency Support</Text>
-        <Text style={styles.emergencyText}>
-          For urgent issues that require immediate attention outside of business hours
-        </Text>
-        <TouchableOpacity 
-          style={styles.emergencyButton}
-          onPress={() => Linking.openURL('tel:+990')}
-        >
-          <Text style={styles.emergencyButtonText}>Call Emergency Line</Text>
-        </TouchableOpacity>
+      <View className="bg-[#15bdc6ff] mx-4 my-4 rounded-xl p-5 border border-red-200">
+        <View className="items-center">
+          <Ionicons name="warning" size={28} color="#dc2626ff" />
+          <Text className="text-xl font-semibold text-gray-800 mt-3 mb-2">Emergency Support</Text>
+          <Text className="text-sm text-gray-700 text-center mb-4">
+            For urgent issues that require immediate attention outside of business hours
+          </Text>
+          <TouchableOpacity 
+            className="bg-red-500 px-6 py-3 rounded-lg"
+            onPress={() => Linking.openURL('tel:+990')}
+          >
+            <Text className="text-white font-semibold text-base">Call Emergency Line</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+      {/* Footer */}
+      <View className="items-center py-6">
+        <Text className="text-gray-700 text-sm">© 2025 ShegaReport. All rights reserved.</Text>
       </View>
     </ScrollView>
   )
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  header: {
-    padding: 24,
-    paddingTop: 48,
-    paddingBottom: 16,
-  },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    marginBottom: 4,
-  },
-  headerSubtitle: {
-    fontSize: 16,
-  },
-  section: {
-    margin: 16,
-    borderRadius: 12,
-    padding: 16,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 16,
-  },
-  contactOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-  },
-  contactIcon: {
-    width: 40,
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  contactText: {
-    flex: 1,
-  },
-  contactTitle: {
-    fontSize: 16,
-    fontWeight: '500',
-    marginBottom: 4,
-  },
-  contactDescription: {
-    fontSize: 14,
-  },
-  resourceOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-  },
-  resourceIcon: {
-    width: 40,
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  resourceText: {
-    flex: 1,
-    fontSize: 16,
-    fontWeight: '500',
-  },
-  hoursContainer: {
-    marginTop: 8,
-  },
-  hoursRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
-  },
-  hoursDay: {
-    fontSize: 16,
-  },
-  hoursTime: {
-    fontSize: 16,
-    fontWeight: '500',
-  },
-  emergencySection: {
-    margin: 16,
-    borderRadius: 12,
-    padding: 20,
-    alignItems: 'center',
-  },
-  emergencyTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#DC2626',
-    marginTop: 12,
-    marginBottom: 8,
-  },
-  emergencyText: {
-    fontSize: 14,
-    color: '#4B5563',
-    textAlign: 'center',
-    marginBottom: 16,
-  },
-  emergencyButton: {
-    backgroundColor: '#DC2626',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 8,
-  },
-  emergencyButtonText: {
-    color: 'white',
-    fontWeight: '600',
-  },
-})
+const styles = StyleSheet.create({})
