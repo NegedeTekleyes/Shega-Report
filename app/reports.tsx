@@ -1,4 +1,3 @@
-// app/(tabs)/report.tsx
 import React, { useEffect, useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert, Image, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -7,6 +6,9 @@ import { useLanguage } from '@/providers/language-providers';
 import * as ImagePicker from 'expo-image-picker';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 import * as Location from 'expo-location'
+import { useAuth } from '@/providers/auth-providers';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as FileSystem from 'expo-file-system'
 
 // interface for location data
 interface LocationData {
@@ -18,407 +20,610 @@ interface LocationData {
 export default function ReportScreen() {
   const { t, language } = useLanguage();
   const router = useRouter();
+  const {user} = useAuth()
   
-  const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    location: '',
-    category: '',
-    urgency: 'medium'
-  });
-  
-  const [photos, setPhotos] = useState<string[]>([]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [currentLocation, setCurrentLocation] = useState<LocationData | null>(null);
-  const [isGettingLocation, setIsGettingLocation] = useState(false);
-  const [locationError, setLocationError] = useState<string>('');
-  // Categories based on water and sanitation issues
-  const categories = [
-    { id: 'water_leak', label: language === 'en' ? 'Water Leak' : 'የውሃ ፍሳሽ' },
-    { id: 'no_water', label: language === 'en' ? 'No Water Supply' : 'ውሃ አለመገኘት' },
-    { id: 'dirty_water', label: language === 'en' ? 'Dirty Water' : 'እርጥበት ውሃ' },
-    { id: 'sanitation', label: language === 'en' ? 'Sanitation Issue' : 'ንፅህና ችግር' },
-    { id: 'pipe_burst', label: language === 'en' ? 'Burst Pipe' : 'የተቀጠቀጠ ቧንቧ' },
-    { id: 'drainage', label: language === 'en' ? 'Drainage Problem' : 'የመፍሰሻ ችግር' },
-  ];
 
-  const urgencyLevels = [
-    { id: 'low', label: language === 'en' ? 'Low' : 'ዝቅተኛ', color: '#10B981' },
-    { id: 'medium', label: language === 'en' ? 'Medium' : 'መካከለኛ', color: '#F59E0B' },
-    { id: 'high', label: language === 'en' ? 'High' : 'ከፍተኛ', color: '#EF4444' },
-    { id: 'emergency', label: language === 'en' ? 'Emergency' : 'አስቸኳይ', color: '#DC2626' },
-  ];
-
-  const pickImage = async () => {
-    try {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert(language === 'en' ? 'Permission required' : 'ፍቃድ ያስፈልጋል', 
-                   language === 'en' ? 'Please allow access to your photos' : 'እባክዎ ወደ ፎቶዎች መዳረሻ ይፍቀዱ');
-        return;
-      }
-
-   const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [4, 3],
-        quality: 0.8,
-      });
-
-      if (!result.canceled && result.assets[0].uri) {
-        setPhotos(prev => [...prev, result.assets[0].uri]);
-      }
-    } catch (error) {
-      console.error('Error picking image:', error);
+  // convert image uri to base64
+// convert image uri to base64 - FIXED VERSION
+const convertToBase64 = async (uri: string): Promise<string | null> => {
+   try {
+    console.log('Converting URI to base64:', uri);
+    
+    // Check if it's already a base64 string
+    if (uri.startsWith('data:image')) {
+      console.log('URI is already base64');
+      return uri;
     }
-  };
-
-  const takePhoto = async () => {
-    try {
-      const { status } = await ImagePicker.requestCameraPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert(language === 'en' ? 'Camera permission required' : 'የካሜራ ፍቃድ ያስፈልጋል');
-        return;
-      }
-
-      const result = await ImagePicker.launchCameraAsync({
-        allowsEditing: true,
-        aspect: [4, 3],
-        quality: 0.8,
+    
+    // Check if it's a file URI that needs conversion
+    if (uri.startsWith('file://')) {
+      console.log('Converting file URI to base64');
+      const base64 = await FileSystem.readAsStringAsync(uri, {
+        encoding: FileSystem.EncodingType.Base64,
       });
-
-      if (!result.canceled && result.assets[0].uri) {
-        setPhotos(prev => [...prev, result.assets[0].uri]);
-      }
-    } catch (error) {
-      console.error('Error taking photo:', error);
-    }
-  };
-
-  const removePhoto = (index: number) => {
-    setPhotos(prev => prev.filter((_, i) => i !== index));
-  };
-
-  // get users location
-  const getCurrentLocation = async () => {
-    try {
-      setIsGettingLocation(true);
-      setLocationError('');
-
-      // Request permission
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        setLocationError(
-          language === 'en' 
-            ? 'Location permission denied' 
-            : 'የአካባቢ ፍቃድ ተቀባይነት አላገኘም'
-        );
-        return;
-      }
-
-      // Get current position
-      const location = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Balanced,
-      });
-
-      // Reverse geocode to get address
-      const [address] = await Location.reverseGeocodeAsync({
-        latitude: location.coords.latitude,
-        longitude: location.coords.longitude,
-      });
-
-      const locationData: LocationData = {
-        latitude: location.coords.latitude,
-        longitude: location.coords.longitude,
-        accuracy: location.coords.accuracy,
-        address: address 
-          ? `${address.street || ''} ${address.name || ''}, ${address.city || ''}`
-          : undefined
-      };
-
-      setCurrentLocation(locationData);
       
-      // Update form location field with address
-      if (locationData.address) {
-        setFormData(prev => ({ ...prev, location: locationData.address! }));
-      }
+      // Determine MIME type from file extension
+      const fileExtension = uri.split('.').pop()?.toLowerCase() || 'jpeg';
+      const mimeType = fileExtension === 'png' ? 'png' : 'jpeg';
+      
+      return `data:image/${mimeType};base64,${base64}`;
+    }
+    
+    console.log('Unknown URI format:', uri);
+    return null;
+  } catch (error) {
+    console.error("Failed to convert image to base64:", error, "URI:", uri);
+    return null;
+  }
+}
 
-    } catch (error) {
-      console.error('Error getting location:', error);
+
+const [formData, setFormData] = useState({
+  title: '',
+  description: '',
+  location: '',
+  category: '',
+  urgency: 'medium'
+});
+const [photos, setPhotos] = useState<string[]>([]);
+const [isSubmitting, setIsSubmitting] = useState(false);
+const [currentLocation, setCurrentLocation] = useState<LocationData | null>(null);
+const [isGettingLocation, setIsGettingLocation] = useState(false);
+const [locationError, setLocationError] = useState<string>('');
+
+// Categories based on water and sanitation issues
+const categories = [
+  { id: 'water_leak', label: language === 'en' ? 'Water Leak' : 'የውሃ ፍሳሽ' },
+  { id: 'no_water', label: language === 'en' ? 'No Water Supply' : 'ውሃ አለመገኘት' },
+  { id: 'dirty_water', label: language === 'en' ? 'Dirty Water' : 'እርጥበት ውሃ' },
+  { id: 'sanitation', label: language === 'en' ? 'Sanitation Issue' : 'ንፅህና ችግር' },
+  { id: 'pipe_burst', label: language === 'en' ? 'Burst Pipe' : 'የተቀጠቀጠ ቧንቧ' },
+  { id: 'drainage', label: language === 'en' ? 'Drainage Problem' : 'የመፍሰሻ ችግር' },
+];
+
+const urgencyLevels = [
+  { id: 'low', label: language === 'en' ? 'Low' : 'ዝቅተኛ', color: '#10B981' },
+  { id: 'medium', label: language === 'en' ? 'Medium' : 'መካከለኛ', color: '#F59E0B' },
+  { id: 'high', label: language === 'en' ? 'High' : 'ከፍተኛ', color: '#EF4444' },
+  { id: 'emergency', label: language === 'en' ? 'Emergency' : 'አስቸኳይ', color: '#DC2626' },
+];
+
+const pickImage = async () => {
+  try {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert(language === 'en' ? 'Permission required' : 'ፍቃድ ያስፈልጋል', 
+                 language === 'en' ? 'Please allow access to your photos' : 'እባክዎ ወደ ፎቶዎች መዳረሻ ይፍቀዱ');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 0.8,
+      base64: true // This will give us base64 directly
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      const asset = result.assets[0];
+      console.log('Image picked:', asset)
+
+      let base64String: string | null = null;
+      if (asset.base64) {
+         base64String = `data:image/jpeg;base64,${asset.base64}`;
+         console.log('Using direct base64 from asset');
+      } 
+      else if (asset.uri) {
+        // Fallback: convert from URI
+        const base64String = await convertToBase64(asset.uri);
+         console.log('Converted from URI, result:', base64String ? 'success' : 'failed');
+      }
+        if (base64String) {
+          setPhotos(prev => [...prev, base64String]);
+           console.log('Photo added to array');
+
+        } else{
+            console.log('Failed to get base64 for image');
+            console.log('Failed to get base64 for image')
+            Alert.alert(
+               language === 'en' ? 'Error' : 'ስህተት',
+            language === 'en' ? 'Failed to process the selected image' : 'የተመረጠውን ምስል ማስተናገድ አልተቻለም'
+            )      
+        }
+      
+    }
+  } catch (error) {
+    console.error('Error picking image:', error);
+    Alert.alert(
+      language === 'en' ? 'Error' : 'ስህተት',
+      language === 'en' ? 'Failed to pick image' : 'ምስል ማምረጥ አልተቻለም'
+    );
+  }
+};
+
+const takePhoto = async () => {
+  try {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert(language === 'en' ? 'Camera permission required' : 'የካሜራ ፍቃድ ያስፈልጋል');
+      return;
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 0.8,
+      base64: true 
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      const asset = result.assets[0];
+      
+      let base64String: string | null = null;
+
+      if (asset.base64) {
+        const base64String = `data:image/jpeg;base64,${asset.base64}`;
+        // setPhotos(prev => [...prev, base64String]);
+      } else if (asset.uri) {
+        const base64 = await convertToBase64(asset.uri);
+      }
+        if (base64String) {
+          setPhotos(prev => [...prev, base64String]);
+        
+      } else {
+          Alert.alert(
+            language === 'en' ? 'Error' : 'ስህተት',
+            language === 'en' ? 'Failed to process the taken photo' : 'የተነሳውን ፎቶ ማስተናገድ አልተቻለም'
+          );
+        }
+    }
+  } catch (error) {
+    console.error('Error taking photo:', error);
+    Alert.alert(
+      language === 'en' ? 'Error' : 'ስህተት',
+      language === 'en' ? 'Failed to take photo' : 'ፎቶ ማንሳት አልተቻለም'
+    );
+  }
+};
+
+const removePhoto = (index: number) => {
+  setPhotos(prev => prev.filter((_, i) => i !== index));
+};
+
+// get users location - UNCHANGED
+const getCurrentLocation = async () => {
+  try {
+    setIsGettingLocation(true);
+    setLocationError('');
+
+    // Request permission
+    const { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== 'granted') {
       setLocationError(
         language === 'en' 
-          ? 'Failed to get location' 
-          : 'አካባቢ ማግኘት አልተቻለም'
-      );
-    } finally {
-      setIsGettingLocation(false);
-    }
-  };
-
-  // Auto-get location when component mounts
-  useEffect(() => {
-    getCurrentLocation();
-  }, []);
-
-
-  const handleSubmit = async () => {
-    if (!formData.title || !formData.description || !formData.category) {
-      Alert.alert(
-        language === 'en' ? 'Missing Information' : 'ጠቃሚ መረጃ ይጠበቃል',
-        language === 'en' ? 'Please fill all required fields' : 'እባክዎ ሁሉንም አስፈላጊ መስኮች ይሙሉ'
+          ? 'Location permission denied' 
+          : 'የአካባቢ ፍቃድ ተቀባይነት አላገኘም'
       );
       return;
     }
 
-    setIsSubmitting(true);
-    
-    // Prepare data with location
-    const reportData = {
-      ...formData,
-      locationData: currentLocation, // Include coordinates
-      photos: photos,
-      timestamp: new Date().toISOString(),
+    // Get current position
+    const location = await Location.getCurrentPositionAsync({
+      accuracy: Location.Accuracy.Balanced,
+    });
+
+    // Reverse geocode to get address
+    const [address] = await Location.reverseGeocodeAsync({
+      latitude: location.coords.latitude,
+      longitude: location.coords.longitude,
+    });
+
+    const locationData: LocationData = {
+      latitude: location.coords.latitude,
+      longitude: location.coords.longitude,
+      accuracy: location.coords.accuracy,
+      address: address 
+        ? `${address.street || ''} ${address.name || ''}, ${address.city || ''}`
+        : undefined
     };
 
-    console.log('Submitting report:', reportData);
+    setCurrentLocation(locationData);
+    
+    // Update form location field with address
+    if (locationData.address) {
+      setFormData(prev => ({ ...prev, location: locationData.address! }));
+    }
 
-    // Simulate API call
-    setTimeout(() => {
-      setIsSubmitting(false);
-      Alert.alert(
-        language === 'en' ? 'Report Submitted' : 'ሪፖርት ቀርቧል',
-        language === 'en' ? 'Your issue has been reported successfully!' : 'ችግርዎ በተሳካ ሁኔታ ተጠቅሷል!',
-        [
-          {
-            text: language === 'en' ? 'OK' : 'እሺ',
-            onPress: () => router.back()
-          }
-        ]
+  } catch (error) {
+    console.error('Error getting location:', error);
+    setLocationError(
+      language === 'en' 
+        ? 'Failed to get location' 
+        : 'አካባቢ ማግኘት አልተቻለም'
+    );
+  } finally {
+    setIsGettingLocation(false);
+  }
+};
+
+// Auto-get location when component mounts
+useEffect(() => {
+  getCurrentLocation();
+}, []);
+
+// loading state and sucess indicators
+const [submitStatus, setSubmitStatus] = useState<'idle'| 'submitting' | 'success' | 'error'>('idle')
+const [submitMessage, setSubmitMessage] = useState('')
+const handleSubmit = async () => {
+  setSubmitStatus('submitting')
+  setSubmitMessage(language === 'en'? 'Submitting your report...':'ሪፖርትዎ በማስገባት ላይ...')
+
+  // Collect missing fields
+  const missingFields = [];
+  if (!formData.title) missingFields.push(language === 'en' ? 'Title' : 'ርዕስ');
+  if (!formData.description) missingFields.push(language === 'en' ? 'Description' : 'መግለጫ');
+  if (!formData.category) missingFields.push(language === 'en' ? 'Category' : 'ምድብ');
+
+  if (missingFields.length > 0) {
+    Alert.alert(
+      language === 'en' ? 'Missing Information' : 'ጠቃሚ መረጃ ይጠበቃል',
+      `${language === 'en' ? 'Please fill the following fields:' : 'እባክዎ የሚከተሉትን መስኮች ይሙሉ'}\n\n${missingFields.join(", ")}`
+    );
+    return;
+  }
+
+  // Extra validation
+  if (formData.description.length < 10) {
+    Alert.alert(
+      language === 'en' ? 'Description too short' : 'መግለጫ በጣም አጭር ነው',
+      language === 'en'
+        ? 'Please provide more details about the issue.'
+        : 'እባክዎ በበለጠ ዝርዝር መግለጫ ይስጡ።'
+    );
+    return;
+  }
+
+  if (!currentLocation) {
+    Alert.alert(
+      language === 'en' ? 'Location Missing' : 'አካባቢ ይጠበቃል',
+      language === 'en'
+        ? 'Please enable location services before submitting.'
+        : 'እባክዎ በሪፖርት ማስገባት በፊት የአካባቢ አገልግሎትን ያብሩ።'
+    );
+    return;
+  }
+
+  setIsSubmitting(true);
+
+  try {
+      console.log('Original photos array:', photos);
+      console.log('Photos array length:', photos.length);
+      
+      // Debug each photo
+      for (let i = 0; i < photos.length; i++) {
+        console.log(`Photo ${i}:`, photos[i]?.substring(0, 50) + '...');
+        console.log(`Photo ${i} type:`, typeof photos[i]);
+        console.log(`Photo ${i} starts with data:`, photos[i]?.startsWith('data:image'));
+      }
+
+      // Filter out any non-base64 strings and use the photos directly
+      const base64Photos = photos.filter(photo => 
+        photo && typeof photo === 'string' && photo.startsWith('data:image')
       );
-    }, 2000);
-  };
+
+      console.log('Filtered base64 photos:', base64Photos.length);
+      
+      // If no valid base64 photos, but we had photos, show error
+      if (photos.length > 0 && base64Photos.length === 0) {
+        Alert.alert(
+          language === 'en' ? 'Photo Error' : 'የፎቶ ስህተት',
+          language === 'en'
+            ? 'The selected photos could not be processed. Please try selecting them again.'
+            : 'የተመረጡት ፎቶዎች ሊሰሩ አልቻሉም። እባክዎ እንደገና ይምረጡ።'
+        );
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Prepare data with location
+      const reportData = {
+        ...formData,
+        user_id: user?.id,
+        locationData: currentLocation,
+        photos: base64Photos,
+        timestamp: new Date().toISOString(),
+      };
+
+      console.log('Submitting report with photos:', base64Photos.length);
+
+      const token = await AsyncStorage.getItem("token");
+      if (!token) {
+        Alert.alert(
+          language === 'en' ? 'Error' : 'ስህተት',
+          language === 'en' ? 'No access token found. Please login again.' : 'የመዳረሻ ማስመሰያ አልተገኘም። እባክዎ ደግመው ይግቡ።'
+        );
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Use your actual server IP instead of localhost
+      const API_BASE = "http://192.168.1.4:3000";
+      const res = await fetch(`${API_BASE}/complaints`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify(reportData),
+      });
+
+      const text = await res.text();
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch (error) {
+        console.error("Failed to parse server response:", text);
+        throw new Error(`Unexpected server response: ${text.substring(0, 100)}...`);
+      }
+
+      if (res.ok) {
+        Alert.alert(
+          language === 'en' ? 'Report Submitted' : 'ሪፖርት ቀርቧል',
+          language === 'en' ? 'Your issue has been reported successfully!' : 'ችግርዎ በተሳካ ሁኔታ ተጠቅሷል!',
+          [
+            { 
+              // text: language === 'en' ? 'OK' : 'እሺ', onPress: () => router.back()
+              text: language === 'en' ? 'View My Reports': 'ሪፖርቶቼን ይመልከቱ',
+              onPress:()=>{
+                router.replace('/reports-history')
+              }
+            }
+          ]
+        );
+      } else {
+        Alert.alert(
+          language === 'en' ? 'Error' : 'ስህተት',
+          data.error || (language === 'en' ? "Failed to submit report" : 'ሪፖርት ለመላክ አልተቻለም')
+        );
+      }
+
+    } catch (error) {
+      console.error("Error submitting report:", error);
+      Alert.alert(
+        language === 'en' ? 'Error' : 'ስህተት',
+        language === 'en' ? 'Something went wrong while submitting the report' : 'ሪፖርት በማስገባት ላይ ስህተት ተፈጥሯል'
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+};
 
   return (
-    <ScrollView className="flex-1 bg-gray-50">
-      {/* Header */}
-      <View className="bg-green-600 px-6 pt-12 pb-6">
-        <View className="flex-row items-center mb-4">
-          <TouchableOpacity onPress={() => router.back()} className="mr-4">
-            <Ionicons name="arrow-back" size={24} color="white" />
-          </TouchableOpacity>
-          <Text className="text-white text-2xl font-bold">
-            {language === 'en' ? 'Report Issue' : 'ችግር ሪፖርት ያድርጉ'}
-          </Text>
-        </View>
+  <ScrollView className="flex-1 bg-gray-50">
+    {/* Header */}
+    <View className="bg-green-600 px-6 pt-12 pb-6">
+      <View className="flex-row items-center mb-4">
+        <TouchableOpacity onPress={() => router.back()} className="mr-4">
+          <Ionicons name="arrow-back" size={24} color="white" />
+        </TouchableOpacity>
+        <Text className="text-white text-2xl font-bold">
+          {language === 'en' ? 'Report Issue' : 'ችግር ሪፖርት ያድርጉ'}
+        </Text>
       </View>
+    </View>
 
-      <View className="px-6 py-6">
-        {/* Issue Title */}
-        <Animated.View entering={FadeInUp.delay(100)} className="mb-6">
-          <Text className="text-gray-800 font-semibold mb-2">
-            {language === 'en' ? 'Issue Title' : 'የችግሩ ርዕስ'} *
-          </Text>
-          <TextInput
-            className="bg-white border border-gray-300 rounded-xl px-4 py-3 text-base"
-            placeholder={language === 'en' ? 'e.g., Water leak in kitchen' : 'ለምሳሌ፥ በማዕድን ቤት ውሃ ፍሳሽ'}
-            value={formData.title}
-            onChangeText={(text) => setFormData(prev => ({ ...prev, title: text }))}
-          />
-        </Animated.View>
+    <View className="px-6 py-6">
+      {/* Issue Title */}
+      <Animated.View entering={FadeInUp.delay(100)} className="mb-6">
+        <Text className="text-gray-800 font-semibold mb-2">
+          {language === 'en' ? 'Issue Title' : 'የችግሩ ርዕስ'} *
+        </Text>
+        <TextInput
+          className="bg-white border border-gray-300 rounded-xl px-4 py-3 text-base"
+          placeholder={language === 'en' ? 'e.g., Water leak in kitchen' : 'ለምሳሌ፥ በማዕድን ቤት ውሃ ፍሳሽ'}
+          value={formData.title}
+          onChangeText={(text) => setFormData(prev => ({ ...prev, title: text }))}
+        />
+      </Animated.View>
 
-        {/* Category Selection */}
-        <Animated.View entering={FadeInUp.delay(200)} className="mb-6">
-          <Text className="text-gray-800 font-semibold mb-2">
-            {language === 'en' ? 'Category' : 'ምድብ'} *
-          </Text>
-          <View className="flex-row flex-wrap gap-2">
-            {categories.map((category) => (
-              <TouchableOpacity
-                key={category.id}
-                className={`px-4 py-2 rounded-full ${
-                  formData.category === category.id 
-                    ? 'bg-green-600' 
-                    : 'bg-gray-200'
-                }`}
-                onPress={() => setFormData(prev => ({ ...prev, category: category.id }))}
-              >
-                <Text className={
-                  formData.category === category.id 
-                    ? 'text-white font-medium' 
-                    : 'text-gray-800'
-                }>
-                  {category.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </Animated.View>
-
-        {/* Description */}
-        <Animated.View entering={FadeInUp.delay(300)} className="mb-6">
-          <Text className="text-gray-800 font-semibold mb-2">
-            {language === 'en' ? 'Description' : 'መግለጫ'} *
-          </Text>
-          <TextInput
-            className="bg-white border border-gray-300 rounded-xl px-4 py-3 text-base h-32"
-            placeholder={language === 'en' ? 'Describe the issue in detail...' : 'ችግሩን በዝርዝር ይግለጹ...'}
-            value={formData.description}
-            onChangeText={(text) => setFormData(prev => ({ ...prev, description: text }))}
-            multiline
-            textAlignVertical="top"
-          />
-        </Animated.View>
-
-        {/* Location */}
-        <Animated.View entering={FadeInUp.delay(400)} className="mb-6">
-          <Text className="text-gray-800 font-semibold mb-2">
-            {language === 'en' ? 'Location' : 'አድራሻ'}
-          </Text>
-          
-          <View className="flex-row gap-2 mb-2">
-            <TextInput
-              className="flex-1 bg-white border border-gray-300 rounded-xl px-4 py-3 text-base"
-              placeholder={language === 'en' ? 'e.g., Kebele 03, House #25' : 'ለምሳሌ፥ ቀበሌ ፫፣ ቤት ቁጥር ፳፭'}
-              value={formData.location}
-              onChangeText={(text) => setFormData(prev => ({ ...prev, location: text }))}
-            />
-            
+      {/* Category Selection */}
+      <Animated.View entering={FadeInUp.delay(200)} className="mb-6">
+        <Text className="text-gray-800 font-semibold mb-2">
+          {language === 'en' ? 'Category' : 'ምድብ'} *
+        </Text>
+        <View className="flex-row flex-wrap gap-2">
+          {categories.map((category) => (
             <TouchableOpacity
-              onPress={getCurrentLocation}
-              disabled={isGettingLocation}
-              className="bg-blue-600 px-4 py-3 rounded-xl items-center justify-center min-w-[60px]"
+              key={category.id}
+              className={`px-4 py-2 rounded-full ${
+                formData.category === category.id 
+                  ? 'bg-green-600' 
+                  : 'bg-gray-200'
+              }`}
+              onPress={() => setFormData(prev => ({ ...prev, category: category.id }))}
             >
-              {isGettingLocation ? (
-                <ActivityIndicator color="white" size="small" />
-              ) : (
-                <Ionicons name="locate" size={24} color="white" />
-              )}
+              <Text className={
+                formData.category === category.id 
+                  ? 'text-white font-medium' 
+                  : 'text-gray-800'
+              }>
+                {category.label}
+              </Text>
             </TouchableOpacity>
+          ))}
+        </View>
+      </Animated.View>
+
+      {/* Description */}
+      <Animated.View entering={FadeInUp.delay(300)} className="mb-6">
+        <Text className="text-gray-800 font-semibold mb-2">
+          {language === 'en' ? 'Description' : 'መግለጫ'} *
+        </Text>
+        <TextInput
+          className="bg-white border border-gray-300 rounded-xl px-4 py-3 text-base h-32"
+          placeholder={language === 'en' ? 'Describe the issue in detail...' : 'ችግሩን በዝርዝር ይግለጹ...'}
+          value={formData.description}
+          onChangeText={(text) => setFormData(prev => ({ ...prev, description: text }))}
+          multiline
+          textAlignVertical="top"
+        />
+      </Animated.View>
+
+      {/* Location */}
+      <Animated.View entering={FadeInUp.delay(400)} className="mb-6">
+        <Text className="text-gray-800 font-semibold mb-2">
+          {language === 'en' ? 'Location' : 'አድራሻ'}
+        </Text>
+        
+        <View className="flex-row gap-2 mb-2">
+          <TextInput
+            className="flex-1 bg-white border border-gray-300 rounded-xl px-4 py-3 text-base"
+            placeholder={language === 'en' ? 'e.g., Kebele 03, House #25' : 'ለምሳሌ፥ ቀበሌ ፫፣ ቤት ቁጥር ፳፭'}
+            value={formData.location}
+            onChangeText={(text) => setFormData(prev => ({ ...prev, location: text }))}
+          />
+          
+          <TouchableOpacity
+            onPress={getCurrentLocation}
+            disabled={isGettingLocation}
+            className="bg-blue-600 px-4 py-3 rounded-xl items-center justify-center min-w-[60px]"
+          >
+            {isGettingLocation ? (
+              <ActivityIndicator color="white" size="small" />
+            ) : (
+              <Ionicons name="locate" size={24} color="white" />
+            )}
+          </TouchableOpacity>
+        </View>
+
+        {/* FIXED: Location error display - wrapped in Text */}
+        {locationError ? (
+          <Text className="text-red-500 text-sm mt-1">{locationError}</Text>
+        ) : null}
+
+        {currentLocation ? (
+          <View className="bg-green-50 p-3 rounded-lg mt-2">
+            <Text className="text-green-800 text-sm">
+              {language === 'en' ? 'GPS Location captured' : 'የጂፒኤስ አካባቢ ተቀምጧል'}
+            </Text>
+            <Text className="text-green-600 text-xs mt-1">
+              Lat: {currentLocation.latitude.toFixed(6)}, Long: {currentLocation.longitude.toFixed(6)}
+            </Text>
+            {currentLocation.accuracy ? (
+              <Text className="text-green-600 text-xs">
+                {language === 'en' ? 'Accuracy' : 'ትክክለኛነት'}: ±{currentLocation.accuracy.toFixed(1)}m
+              </Text>
+            ) : null}
           </View>
+        ) : null}
+      </Animated.View>
 
-          {locationError && (
-            <Text className="text-red-500 text-sm mt-1">{locationError}</Text>
-          )}
-
-          {currentLocation && (
-            <View className="bg-green-50 p-3 rounded-lg mt-2">
-              <Text className="text-green-800 text-sm">
-                📍 {language === 'en' ? 'GPS Location captured' : 'የጂፒኤስ አካባቢ ተቀምጧል'}
+      {/* Urgency Level */}
+      <Animated.View entering={FadeInUp.delay(500)} className="mb-6">
+        <Text className="text-gray-800 font-semibold mb-2">
+          {language === 'en' ? 'Urgency Level' : 'የአስቸኳይነት ደረጃ'}
+        </Text>
+        <View className="flex-row flex-wrap gap-2">
+          {urgencyLevels.map((level) => (
+            <TouchableOpacity
+              key={level.id}
+              className={`px-4 py-2 rounded-full ${
+                formData.urgency === level.id 
+                  ? 'border-2' 
+                  : 'border border-gray-300'
+              }`}
+              style={{
+                backgroundColor: formData.urgency === level.id ? level.color : 'white',
+                borderColor: level.color
+              }}
+              onPress={() => setFormData(prev => ({ ...prev, urgency: level.id }))}
+            >
+              <Text className={
+                formData.urgency === level.id 
+                  ? 'text-white font-medium' 
+                  : 'text-gray-800'
+              }>
+                {level.label}
               </Text>
-              <Text className="text-green-600 text-xs mt-1">
-                Lat: {currentLocation.latitude.toFixed(6)}, Long: {currentLocation.longitude.toFixed(6)}
-              </Text>
-              {currentLocation.accuracy && (
-                <Text className="text-green-600 text-xs">
-                  {language === 'en' ? 'Accuracy' : 'ትክክለኛነት'}: ±{currentLocation.accuracy.toFixed(1)}m
-                </Text>
-              )}
-            </View>
-          )}
-        </Animated.View>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </Animated.View>
 
-        {/* Urgency Level */}
-        <Animated.View entering={FadeInUp.delay(500)} className="mb-6">
-          <Text className="text-gray-800 font-semibold mb-2">
-            {language === 'en' ? 'Urgency Level' : 'የአስቸኳይነት ደረጃ'}
-          </Text>
+      {/* Photo Upload */}
+      <Animated.View entering={FadeInUp.delay(600)} className="mb-6">
+        <Text className="text-gray-800 font-semibold mb-2">
+          {language === 'en' ? 'Add Photos' : 'ፎቶዎች ያክሉ'}
+        </Text>
+        
+        <View className="flex-row gap-3 mb-4">
+          <TouchableOpacity 
+            onPress={takePhoto}
+            className="bg-green-600 px-4 py-3 rounded-xl flex-row items-center"
+          >
+            <Ionicons name="camera" size={20} color="white" />
+            <Text className="text-white font-medium ml-2">
+              {language === 'en' ? 'Take Photo' : 'ፎቶ ይቅረቡ'}
+            </Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            onPress={pickImage}
+            className="bg-blue-600 px-4 py-3 rounded-xl flex-row items-center"
+          >
+            <Ionicons name="image" size={20} color="white" />
+            <Text className="text-white font-medium ml-2">
+              {language === 'en' ? 'Choose from Gallery' : 'ከፎቶ አልበም ይምረጡ'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Display Selected Photos */}
+        {photos.length > 0 ? (
           <View className="flex-row flex-wrap gap-2">
-            {urgencyLevels.map((level) => (
-              <TouchableOpacity
-                key={level.id}
-                className={`px-4 py-2 rounded-full ${
-                  formData.urgency === level.id 
-                    ? 'border-2' 
-                    : 'border border-gray-300'
-                }`}
-                style={{
-                  backgroundColor: formData.urgency === level.id ? level.color : 'white',
-                  borderColor: level.color
-                }}
-                onPress={() => setFormData(prev => ({ ...prev, urgency: level.id }))}
-              >
-                <Text className={
-                  formData.urgency === level.id 
-                    ? 'text-white font-medium' 
-                    : 'text-gray-800'
-                }>
-                  {level.label}
-                </Text>
-              </TouchableOpacity>
+            {photos.map((photo, index) => (
+              <View key={index} className="relative">
+                <Image 
+                  source={{ uri: photo }} 
+                  className="w-20 h-20 rounded-lg"
+                />
+                <TouchableOpacity 
+                  onPress={() => removePhoto(index)}
+                  className="absolute -top-2 -right-2 bg-red-500 rounded-full w-6 h-6 justify-center items-center"
+                >
+                  <Ionicons name="close" size={16} color="white" />
+                </TouchableOpacity>
+              </View>
             ))}
           </View>
-        </Animated.View>
+        ) : null}
+      </Animated.View>
 
-        {/* Photo Upload */}
-        <Animated.View entering={FadeInUp.delay(600)} className="mb-6">
-          <Text className="text-gray-800 font-semibold mb-2">
-            {language === 'en' ? 'Add Photos' : 'ፎቶዎች ያክሉ'}
-          </Text>
-          
-          <View className="flex-row gap-3 mb-4">
-            <TouchableOpacity 
-              onPress={takePhoto}
-              className="bg-green-600 px-4 py-3 rounded-xl flex-row items-center"
-            >
-              <Ionicons name="camera" size={20} color="white" />
-              <Text className="text-white font-medium ml-2">
-                {language === 'en' ? 'Take Photo' : 'ፎቶ ይቅረቡ'}
-              </Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity 
-              onPress={pickImage}
-              className="bg-blue-600 px-4 py-3 rounded-xl flex-row items-center"
-            >
-              <Ionicons name="image" size={20} color="white" />
-              <Text className="text-white font-medium ml-2">
-                {language === 'en' ? 'Choose from Gallery' : 'ከፎቶ አልበም ይምረጡ'}
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Display Selected Photos */}
-          {photos.length > 0 && (
-            <View className="flex-row flex-wrap gap-2">
-              {photos.map((photo, index) => (
-                <View key={index} className="relative">
-                  <Image 
-                    source={{ uri: photo }} 
-                    className="w-20 h-20 rounded-lg"
-                  />
-                  <TouchableOpacity 
-                    onPress={() => removePhoto(index)}
-                    className="absolute -top-2 -right-2 bg-red-500 rounded-full w-6 h-6 justify-center items-center"
-                  >
-                    <Ionicons name="close" size={16} color="white" />
-                  </TouchableOpacity>
-                </View>
-              ))}
-            </View>
-          )}
-        </Animated.View>
-
-        {/* Submit Button */}
-        <Animated.View entering={FadeInUp.delay(700)}>
-          <TouchableOpacity
-            onPress={handleSubmit}
-            disabled={isSubmitting}
-            className={`bg-green-600 py-4 rounded-xl items-center ${
-              isSubmitting ? 'opacity-50' : ''
-            }`}
-          >
-            {isSubmitting ? (
+      {/* Submit Button */}
+      <Animated.View entering={FadeInUp.delay(700)}>
+        <TouchableOpacity
+          onPress={handleSubmit}
+          disabled={isSubmitting}
+          className={`bg-green-600 py-4 rounded-xl items-center ${
+            isSubmitting ? 'opacity-50' : ''
+          }`}
+        >
+          {isSubmitting ? (
+            <View className="flex-row items-center">
+              <ActivityIndicator color="white" size="small" className="mr-2" />
               <Text className="text-white font-semibold text-lg">
                 {language === 'en' ? 'Submitting...' : 'በማስገባት ላይ...'}
               </Text>
-            ) : (
-              <Text className="text-white font-semibold text-lg">
-                {language === 'en' ? 'Submit Report' : 'ሪፖርት ያስገቡ'}
-              </Text>
-            )}
-          </TouchableOpacity>
-        </Animated.View>
-      </View>
-    </ScrollView>
-  );
+            </View>
+          ) : (
+            <Text className="text-white font-semibold text-lg">
+              {language === 'en' ? 'Submit Report' : 'ሪፖርት ያስገቡ'}
+            </Text>
+          )}
+        </TouchableOpacity>
+      </Animated.View>
+    </View>
+  </ScrollView>
+);
 }

@@ -24,29 +24,68 @@ export default function SignUp() {
   }))
 
   // Mock signup API - REPLACE WITH ACTUAL API
-  const mockSignupApi = async (name: string, email: string, password: string) => {
-    await new Promise(resolve => setTimeout(resolve, 1500));
+  // const mockSignupApi = async (name: string, email: string, password: string) => {
+  //   await new Promise(resolve => setTimeout(resolve, 1500));
     
-    if (email && password.length >= 6) {
-      return {
-        success: true,
-        user: {
-          id: Math.random().toString(36).substr(2, 9),
-          email: email,
-          name: name,
-          role: 'resident' as const,
-          phone: '+251912345678',
-          isVerified: false
-        },
-        token: 'mock-jwt-token-' + Math.random().toString(36).substr(2, 9)
-      };
-    } else {
-      return {
-        success: false,
-        error: 'Registration failed. Please try again.'
-      };
+  //   if (email && password.length >= 6) {
+  //     return {
+  //       success: true,
+  //       user: {
+  //         id: Math.random().toString(36).substr(2, 9),
+  //         email: email,
+  //         name: name,
+  //         role: 'resident' as const,
+  //         phone: '+251912345678',
+  //         isVerified: false
+  //       },
+  //       token: 'mock-jwt-token-' + Math.random().toString(36).substr(2, 9)
+  //     };
+  //   } else {
+  //     return {
+  //       success: false,
+  //       error: 'Registration failed. Please try again.'
+  //     };
+  //   }
+  // };
+
+
+  const signUpApi = async (name: string, email: string, password: string) => {
+  try {
+    const response = await fetch("http://192.168.1.4:3000/auth/signup", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email,
+        password,
+        role: "RESIDENT", // or dynamic role if you add selection
+        name,             // full name mapped to backend `name`
+        phone: "+251912345678", // optional, hardcoded for now
+      }),
+    });
+
+    if (!response.ok) {
+      // If backend returns error (e.g. 400, 500)
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Signup failed");
     }
-  };
+
+    const data = await response.json();
+    return {
+      success: true,
+      user: data.user,
+      token: data.access_token,
+    };
+  } catch (error: any) {
+    console.error("Signup API Error:", error.message);
+    return {
+      success: false,
+      error: error.message || "Something went wrong",
+    };
+  }
+};
+
 
   const handleSignup = async () => {
     if(!fullName || !email || !password || !confirmPassword){
@@ -66,12 +105,12 @@ export default function SignUp() {
     setError("");
 
     try {
-      const authResponse = await mockSignupApi(fullName, email, password);
+      const authResponse = await signUpApi(fullName, email, password);
       
       if (authResponse.success && authResponse.user && authResponse.token) {
         login(authResponse.user, authResponse.token);
         Alert.alert(t('signupSuccess'), `${t('welcome')} ${fullName}!`);
-        router.replace("/");
+        router.replace("/(tabs)");
       } else {
         setError(authResponse.error || t('signupError'));
       }

@@ -1,7 +1,5 @@
 import { StyleSheet, View, Text, ActivityIndicator } from 'react-native';
 import { useLanguage } from '@/providers/language-providers';
-
-// import { StyleSheet, Text, View } from 'react-native'
 import React from 'react'
 export default function LoadingScreen() {
   const { t } = useLanguage();

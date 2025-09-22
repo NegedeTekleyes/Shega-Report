@@ -1,16 +1,19 @@
-import React, { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import React, { createContext, ReactNode, useContext, useEffect, useState } from "react";
 import { Platform } from "react-native";
 
 // -------------------- TYPES --------------------
-export type UserRole = 'resident' | 'admin' | 'technician';
+export type UserRole = 'resident' | 'technician';
 
 export interface User {
   id: string;
   email: string;
   name: string;
   role: UserRole;
-  phone?: string;
   isVerified: boolean;
+  profilePhoto?: string
+  // add technicial-specific properties if needed
+  specialization?: string
+  phoneNumber?: string
 }
 
 interface AuthContextProps {
@@ -68,7 +71,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     await storage.removeItem("user");
     await storage.removeItem("token");
   };
-
+ 
   return (
     <AuthContext.Provider
       value={{

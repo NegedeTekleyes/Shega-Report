@@ -35,6 +35,12 @@ export default function WelcomeScreen() {
       className="flex-1"
     >
       <StatusBar style="light" />
+      
+      {/* Animated Water Droplets Background */}
+      {/* <WaterDroplet style={{ top: '15%', left: '10%' }} delay={200} />
+      <WaterDroplet style={{ top: '25%', right: '15%' }} delay={400} />
+      <WaterDroplet style={{ top: '60%', left: '20%' }} delay={600} />
+      <WaterDroplet style={{ top: '70%', right: '25%' }} delay={800} /> */}
 
       <SafeAreaView className="flex-1">
         {/* Header with Language Button */}

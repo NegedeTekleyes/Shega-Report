@@ -3,20 +3,36 @@
     "name": "ShegaReport",
     "slug": "ShegaReport",
     "version": "1.0.0",
+    "sdkVersion": "53.0.22",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "shegareport",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "Allow ShegaReport to use your camera to take photos of water and sanitation issues.",
+        "NSPhotoLibraryUsageDescription": "Allow ShegaReport to access your photos to attach images to reports.",
+        "NSPhotoLibraryAddUsageDescription": "Allow ShegaReport to save photos to your library."
+      }
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "foregroundImage": "./assets/images/icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "ACCESS_MEDIA_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION"
+      ],
+      "package": "com.yourcompany.shegareport"
     },
     "web": {
       "bundler": "metro",
@@ -34,10 +50,36 @@
           "backgroundColor": "#ffffff"
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow ShegaReport to access your photos to attach images to water and sanitation issue reports.",
+          "cameraPermission": "Allow ShegaReport to use your camera to take photos of issues for better reporting.",
+          "microphonePermission": false
+        }
+      ],
+            [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow ShegaReport to use your location to pinpoint water and sanitation issues.",
+          "locationAlwaysPermission": "Allow ShegaReport to use your location to pinpoint water and sanitation issues.",
+          "locationWhenInUsePermission": "Allow ShegaReport to use your location to pinpoint water and sanitation issues.",
+          "isAndroidBackgroundLocationEnabled": true
+        }
+      ]
+    
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "your-eas-project-id"
+      }
     }
   }
 }

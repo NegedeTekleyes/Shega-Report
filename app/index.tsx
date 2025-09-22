@@ -1,13 +1,26 @@
 // app/index.tsx
 import { Text, TouchableOpacity, View } from "react-native";
 import './global.css'
-import { router } from "expo-router";
+import { router, Redirect } from "expo-router";
 import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
 import { FontAwesome5 } from "@expo/vector-icons";
 import { useLanguage } from "@/providers/language-providers";
+import { useAuth } from "@/providers/auth-providers";
+import LoadingScreen from "../components/loadingScreen";
 
 export default function Index() {
   const { language, t, changeLanguage } = useLanguage();
+  const { isAuthenticated, isLoading } = useAuth();
+
+  // Show loading screen while checking auth state
+  if (isLoading) {
+    return <LoadingScreen />;
+  }
+
+  // Redirect to dashboard if already authenticated
+  if (isAuthenticated) {
+    return <Redirect href="/(tabs)/profile" />;  
+  }
 
   return (
     <View className="flex-1 items-center justify-center bg-green-600 px-6">
@@ -40,7 +53,7 @@ export default function Index() {
 
         <TouchableOpacity
           onPress={() => router.push('/(auth)/signup')}
-          className="border-2 border-white py-4 rounded-xl items-center"
+          className="border-2 border-white py-4 rounded-xl items-center mt-6"
         >
           <Text className="text-white font-semibold text-lg">{t('register')}</Text>
         </TouchableOpacity>

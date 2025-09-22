@@ -8,7 +8,7 @@ export default function AuthLayout() {
   return (
  <View className='flex-1 bg-white'>
           {/* language switcher */}
-          <View className='flex-row justify-end p-4 bg-green-600'>
+          {/* <View className='flex-row justify-end p-4 bg-green-600'>
             <TouchableOpacity
             onPress={()=>changeLanguage(language === 'en' ? 'am' : 'en')}
             className='px-3 py-1 bg-white rounded'
@@ -17,16 +17,21 @@ export default function AuthLayout() {
                   {language === 'en' ? 'አማ' : 'EN'}
                 </Text>
             </TouchableOpacity>
-          </View>
+          </View>  */}
           {/* auth pages */}
           <Stack
               screenOptions={{
                 headerStyle: {backgroundColor: '#16a34a'},
                 headerTintColor: '#ffffff',
                 headerTitleStyle: {fontWeight: 'bold'},
+                headerShown: false
                 
               }}>
 
+            <Stack.Screen
+            name='welcome'
+            options={{headerShown: false}}
+            />
             <Stack.Screen
             name='login'
             options={{title: t('login')}}

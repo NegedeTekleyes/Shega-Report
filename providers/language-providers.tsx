@@ -50,10 +50,41 @@ export const translations = {
   pleaseEnterBoth: { en: "Please enter both email and password", am: "እባክዎ ኢሜይል እና የይለፍ ቃል ያስገቡ" },
   loginError: { en: "Login failed. Please try again.", am: "ግባት አልተሳካም። እባክዎ ደግሞ ይሞክሩ።" },
   loading: {en: 'loading plase wait', am: 'እባኮ ይታገሱ'},
-  alreadyHaveAccount: {en: 'Already Have Account', am: "ቀድሞውኑ መለያ አሎት?"},
-  creatingAccount: {en: 'Create account', am: "በመጫን ላይ"}
-  // Add more translations as needed
-};
+  alreadyHaveAccount: {en: 'Already Have Account?s', am: "ቀድሞውኑ መለያ አሎት?"},
+  creatingAccount: {en: 'Create account', am: "በመጫን ላይ"},
+logout: { en: "Logout", am: "ውጣ" },
+confirmLogout: { en: "Are you sure you want to logout?", am: "እርግጠኛ ነዎት መውጣት ይፈልጋሉ?" },
+cancel: { en: "Cancel", am: "ሰርዝ" },
+dashboard: { en: "Dashboard", am: "ዳሽቦርድ" },
+map: { en: "Map", am: "ካርታ" },
+reports: { en: "Reports", am: "ሪፖርቶች" },
+profile: { en: "Profile", am: "መገለጫ" },
+reportsSubmitted: { en: "Reports Submitted", am: "የቀረቡ ሪፖርቶች" },
+issuesResolved: { en: "Issues Resolved", am: "የተፈቱ ችግሮች" },
+pendingIssues: { en: "Pending Issues", am: "በጥበቃ ላይ ያሉ ችግሮች" },
+reportIssue: { en: "Report Issue", am: "ችግር ሪፖርት ያድርጉ" },
+viewMap: { en: "View Map", am: "ካርታ ይመልከቱ" },
+myReports: { en: "My Reports", am: "የእኔ ሪፖርቶች" },
+notifications: { en: "Notifications", am: "ማስታወቂያዎች" },
+waterManagement: { en: "Water Management", am: "የውሃ አስተዳደር" },
+overview: { en: "Overview", am: "አጠቃላይ እይታ" },
+quickActions: { en: "Quick Actions", am: "ፈጣን እርምጃዎች" },
+recentActivity: { en: "Recent Activity", am: "የቅርብ ጊዜ እንቅስቃሴ" },
+noRecentActivity: { en: "No recent activity", am: "ምንም የቅርብ ጊዜ እንቅስቃሴ የለም" },
+role: { en: "Role", am: "ሚና" },
+status: { en: "Status", am: "ሁኔታ" },
+verified: { en: "Verified", am: "ተረጋግጥል" },
+pendingVerification: { en: "Pending", am: "በጥበቃ ላይ" },
+phone: { en: "Phone", am: "ስልክ" },
+waterSanitationManagement: { 
+  en: "Water & Sanitation Complaint Management", 
+  am: "የውሃ እና የንፅህና ቅሬታ አስተዳደር" 
+},
+loginSuccess: {en: "Login Successfully", am: "በሚገባ ገብተዋል"},
+settings: {en: "Settings", am:'ማውጫ'},
+cancell: {en: 'Cancel', am: "ዝጋ"},
+emergencyIssue: {en: 'Report Emergency', am: 'አስቸኳይ ሪፖርት'},
+activityWillAppearHere: { en: "Your recent activities will appear here", am: "የቅርብ ጊዜ እንቅስቃሴዎችዎ እዚህ ይታያሉ" }};
 
 export type TranslationKey = keyof typeof translations;
 

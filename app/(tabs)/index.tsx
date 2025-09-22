@@ -1,16 +1,17 @@
 // app/(tabs)/index.tsx
-import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Alert } from 'react-native';
-import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/providers/auth-providers';
 import { useLanguage } from '@/providers/language-providers';
-import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
+import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
+import React, { useState } from 'react';
+import { Alert, Modal, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 
 export default function HomeScreen() {
   const { user, logout } = useAuth();
   const { t, language } = useLanguage();
+  const [menuVisible, setMenuVisible] = useState(false)
   const router = useRouter();
 
   const handleLogout = () => {
@@ -65,28 +66,28 @@ export default function HomeScreen() {
     {
       icon: 'add-circle',
       label: t('reportIssue'),
-      screen: '/(tabs)/report',
+      screen: '/reports',
       color: '#EF4444',
       gradient: ['#EF4444', '#F87171']
     },
     {
       icon: 'map',
       label: t('viewMap'),
-      screen: '/(tabs)/map',
+      screen: '/map',
       color: '#8B5CF6',
       gradient: ['#8B5CF6', '#A78BFA']
     },
     {
       icon: 'list',
       label: t('myReports'),
-      screen: '/(tabs)/reports',
+      screen: '/reports-history',
       color: '#06B6D4',
       gradient: ['#06B6D4', '#22D3EE']
     },
     {
       icon: 'notifications',
       label: t('notifications'),
-      screen: '/(tabs)/notifications',
+      screen: '/(tabs)/notification',
       color: '#F97316',
       gradient: ['#F97316', '#FB923C']
     },
@@ -108,7 +109,7 @@ export default function HomeScreen() {
       time: language === 'en' ? '1 day ago' : '1 ቀን በፊት',
       location: 'Kebele 01',
       icon: 'construct'
-    }
+    } 
   ];
 
   return (
@@ -126,19 +127,54 @@ export default function HomeScreen() {
             </Text>
           </View>
           
-          {/* User Profile with Logout */}
-          <View className="flex-row items-center space-x-3">
-            <TouchableOpacity 
-              onPress={handleLogout}
-              className="bg-white/20 p-2 rounded-full"
+          {/* profile avater */}
+          <View>
+            <TouchableOpacity
+            onPress={() => setMenuVisible(true)}
+            className='w-10 h-10 bg-white/20 rounded-full justify-center items-center'
             >
-              <Ionicons name="log-out-outline" size={22} color="white" />
-            </TouchableOpacity>
-            <View className="w-10 h-10 bg-white/20 rounded-full justify-center items-center">
-              <Text className="text-white font-bold text-lg">
+              <Text className='text-white font-bold text-lg'>
                 {user?.name?.charAt(0)?.toUpperCase()}
               </Text>
-            </View>
+            </TouchableOpacity>
+            {/* dropdown modal */}
+            <Modal
+        visible={menuVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setMenuVisible(false)}
+      >
+        <TouchableOpacity
+          className="flex-1 bg-black/40"
+          activeOpacity={1}
+          onPressOut={() => setMenuVisible(false)}
+        >
+          <View className="absolute top-14 right-4 bg-white rounded-xl shadow-lg p-3 w-40">
+            <TouchableOpacity
+              className="flex-row items-center p-2"
+              onPress={() => {
+                setMenuVisible(false);
+                // navigate to profile page
+                router.push('/(tabs)/profile')
+              }}
+            >
+              <Ionicons name="person-circle-outline" size={20} color="black" />
+              <Text className="ml-2 text-black">Profile</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              className="flex-row items-center p-2"
+              onPress={() => {
+                setMenuVisible(false);
+                handleLogout();
+              }}
+            >
+              <Ionicons name="log-out-outline" size={20} color="black" />
+              <Text className="ml-2 text-black">Logout</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
           </View>
         </View>
 
@@ -176,7 +212,7 @@ export default function HomeScreen() {
       <ScrollView className="flex-1 px-5" showsVerticalScrollIndicator={false}>
         {/* Statistics Cards */}
         <Text className="text-2xl font-bold mt-6 mb-4 text-gray-800">
-          📊 {t('overview')}
+           {t('overview')}
         </Text>
         
         <View className="flex-row justify-between mb-6 -mx-1">
@@ -207,38 +243,54 @@ export default function HomeScreen() {
         </View>
 
         {/* Quick Actions */}
-        <Text className="text-2xl font-bold mb-4 text-gray-800">
-          ⚡ {t('quickActions')}
-        </Text>
-        
-        <View className="flex-row flex-wrap justify-between mb-6  items-center">
-          {quickActions.map((action, index) => (
-            <Animated.View
-              key={action.label}
-              entering={FadeInUp.delay(500 + index * 100)}
-              className=" mb-4 "
-            >
-              <TouchableOpacity
-                onPress={() => router.push(action.screen as any)}
-                className="bg-white p-5 rounded-2xl shadow-lg border border-gray-100 active:scale-95"
-              >
-                <LinearGradient
-                  colors={action.gradient}
-                  className="w-14 h-14 rounded-2xl justify-center items-center mb-3"
-                >
-                  <Ionicons name={action.icon} size={28} color="white" />
-                </LinearGradient>
-                <Text className="text-gray-800 font-semibold text-center text-sm">
-                  {action.label}
-                </Text>
-              </TouchableOpacity>
-            </Animated.View>
-          ))}
+{/* Quick Actions */}
+<Text className="text-2xl font-bold mb-4 text-gray-800">
+  {t('quickActions')}
+</Text>
+
+<View className="flex-row flex-wrap justify-between mb-6">
+  {quickActions.map((action, index) => (
+    <Animated.View
+      key={action.label}
+      entering={FadeInUp.delay(500 + index * 100)}
+      className="w-[48%] mb-4"
+    >
+      <TouchableOpacity
+        onPress={() => router.push(action.screen as any)}
+        className="bg-white p-5 rounded-2xl shadow-lg border border-gray-100 active:scale-95"
+      >
+        {/* Force center the icon */}
+        <View className='items-center'>
+        <LinearGradient
+          colors={action.gradient}
+          style={{
+            width: 56, // 14 * 4 (Tailwind w-14)
+            height: 56, // 14 * 4
+            borderRadius: 16,
+            justifyContent: 'center',
+            alignItems: 'center',
+            marginBottom: 12,
+          }}
+        >
+          <Ionicons name={action.icon} size={28} color="white" />
+        </LinearGradient>
+
         </View>
+
+        {/* Label under icon */}
+        <Text className="text-gray-800 font-semibold text-center text-sm">
+          {action.label}
+        </Text>
+      </TouchableOpacity>
+    </Animated.View>
+  ))}
+</View>
+
+
 
         {/* Recent Activity */}
         <Text className="text-2xl font-bold mb-4 text-gray-800">
-          📋 {t('recentActivity')}
+          {t('recentActivity')}
         </Text>
         
         <View className="mb-8">
@@ -284,29 +336,36 @@ export default function HomeScreen() {
         </View>
 
         {/* Emergency Quick Action */}
-        <Animated.View 
-          entering={FadeInUp.delay(900)}
-          className="bg-red-50 rounded-2xl p-5 mb-8 border border-red-200"
-        >
-          <View className="flex-row items-center mb-3">
-            <View className="w-12 h-12 bg-red-100 rounded-full justify-center items-center mr-3">
-              <Ionicons name="warning" size={24} color="#EF4444" />
-            </View>
-            <View className="flex-1">
-              <Text className="text-red-800 font-semibold text-lg">
-                {language === 'en' ? 'Emergency Issue?' : 'አስቸኳይ ችግር?'}
-              </Text>
-              <Text className="text-red-600 text-sm">
-                {language === 'en' ? 'Report critical issues immediately' : 'አስቸኳይ ችግሮችን ወዲያውኑ ይለግሱ'}
-              </Text>
-            </View>
-          </View>
-          <TouchableOpacity className="bg-red-600 py-3 rounded-xl">
-            <Text className="text-white font-semibold text-center">
-              {language === 'en' ? 'Report Emergency' : 'አስቸኳይ ሪፖርት'}
-            </Text>
-          </TouchableOpacity>
-        </Animated.View>
+        <Animated.View
+  key="emergency"
+  entering={FadeInUp.delay(900)}
+  className="bg-red-50 rounded-2xl p-5 mb-8 border border-red-200"
+>
+  <View className="flex-row items-center mb-3">
+    <View className="w-12 h-12 bg-red-100 rounded-full justify-center items-center mr-3">
+      <Ionicons name="warning" size={24} color="#EF4444" />
+    </View>
+    <View className="flex-1">
+      <Text className="text-red-800 font-semibold text-lg">
+        {language === 'en' ? 'Emergency Issue?' : 'አስቸኳይ ችግር?'}
+      </Text>
+      <Text className="text-red-600 text-sm">
+        {language === 'en'
+          ? 'Report critical issues immediately'
+          : 'አስቸኳይ ችግሮችን ወዲያውኑ ይለግሱ'}
+      </Text>
+    </View>
+  </View>
+
+  <TouchableOpacity
+    className="bg-red-600 py-3 rounded-xl"
+    onPress={() => router.push('/reports')} >
+    <Text className="text-white font-semibold text-center">
+      {language === 'en' ? 'Report Emergency' : 'አስቸኳይ ሪፖርት'}
+    </Text>
+  </TouchableOpacity>
+</Animated.View>
+
       </ScrollView>
     </View>
   );

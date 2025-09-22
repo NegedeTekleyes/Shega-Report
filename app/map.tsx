@@ -337,38 +337,6 @@ export default function MapScreen() {
           </Animated.View>
         </View>
       )}
-
-      {/* Stats Bar */}
-      {/* <View className="bg-white px-6 py-3 border-t border-gray-200">
-        <View className="flex-row justify-between">
-          <View className="items-center">
-            <Text className="text-2xl font-bold text-gray-800">
-              {mockWaterIssues.length}
-            </Text>
-            <Text className="text-gray-600 text-xs">
-              {language === 'en' ? 'Total Issues' : 'ጠቅላላ ችግሮች'}
-            </Text>
-          </View>
-          
-          <View className="items-center">
-            <Text className="text-2xl font-bold text-green-600">
-              {mockWaterIssues.filter(i => i.status === 'resolved').length}
-            </Text>
-            <Text className="text-gray-600 text-xs">
-              {language === 'en' ? 'Resolved' : 'ተፈትተዋል'}
-            </Text>
-          </View>
-          
-          <View className="items-center">
-            <Text className="text-2xl font-bold text-yellow-600">
-              {mockWaterIssues.filter(i => i.status === 'in_progress').length}
-            </Text>
-            <Text className="text-gray-600 text-xs">
-              {language === 'en' ? 'In Progress' : 'በሂደት ላይ'}
-            </Text>
-          </View>
-        </View>
-      </View> */}
     </View>
   );
 }
