@@ -1,4 +1,3 @@
-// app/(auth)/welcome.tsx
 import { router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
@@ -17,31 +16,12 @@ import Animated, {
 
 export default function WelcomeScreen() {
   const { t, language, changeLanguage } = useLanguage();
-
-  // Animated water droplets for background
-  const WaterDroplet = ({ style, delay }: any) => (
-    <Animated.View 
-      entering={FadeIn.delay(delay).springify()}
-      className="absolute opacity-20"
-      style={style}
-    >
-      <Ionicons name="water" size={30} color="#FFFFFF" />
-    </Animated.View>
-  );
-
   return (
     <LinearGradient
-      colors={['#009639', '#00B341', '#00802b']}
+      colors={['#0a5398ff', '#15bdc6ff']}
       className="flex-1"
     >
       <StatusBar style="light" />
-      
-      {/* Animated Water Droplets Background */}
-      {/* <WaterDroplet style={{ top: '15%', left: '10%' }} delay={200} />
-      <WaterDroplet style={{ top: '25%', right: '15%' }} delay={400} />
-      <WaterDroplet style={{ top: '60%', left: '20%' }} delay={600} />
-      <WaterDroplet style={{ top: '70%', right: '25%' }} delay={800} /> */}
-
       <SafeAreaView className="flex-1">
         {/* Header with Language Button */}
         <Animated.View 
@@ -50,7 +30,7 @@ export default function WelcomeScreen() {
         >
           <View className="flex-row items-center">
             <Ionicons name="location" size={16} color="#FFDE00" />
-            <Text className="text-yellow-300 text-sm font-medium ml-2">
+            <Text className=" italic text-yellow-300 text-sm font-medium ml-2">
               Debre Birhan
             </Text>
           </View>
@@ -68,19 +48,7 @@ export default function WelcomeScreen() {
 
         {/* Main Content */}
         <View className="flex-1 justify-center items-center px-6">
-          {/* Animated Logo Container */}
-          <Animated.View 
-            entering={ZoomIn.duration(1000).springify()}
-            className="items-center mb-8"
-          >
-            <View className="w-36 h-36 bg-white/10 rounded-3xl justify-center items-center mb-6 shadow-2xl backdrop-blur-md">
-              <View className="w-28 h-28 bg-white rounded-full justify-center items-center shadow-lg">
-                <Animated.View entering={BounceIn.delay(300)}>
-                  <Ionicons name="water" color="#009639" size={60} />
-                </Animated.View>
-              </View>
-            </View>
-            
+          <Animated.View className="items-center mb-8" >
             <Animated.View entering={FadeInUp.delay(400)}>
               <Text className="text-white text-4xl font-bold mb-2 text-center">
                 Shega
@@ -162,13 +130,12 @@ export default function WelcomeScreen() {
           <Animated.View entering={FadeInUp.delay(1000)} className="w-full mb-6">
             <View className="flex-row justify-between mb-4">
               {[
-                { icon: '', text: language === 'en' ? 'Fast Response' : 'ፈጣን ምላሽ' },
-                { icon: '', text: language === 'en' ? 'Easy Reporting' : 'ቀላል ሪፖርት' },
-                { icon: '', text: language === 'en' ? 'GPS Tracking' : 'ጂፒኤስ ክትትል' },
+                {  text: language === 'en' ? 'Fast Response' : 'ፈጣን ምላሽ' },
+                { text: language === 'en' ? 'Easy Reporting' : 'ቀላል ሪፖርት' },
+                {  text: language === 'en' ? 'GPS Tracking' : 'ጂፒኤስ ክትትል' },
               ].map((item, index) => (
                 <View key={index} className="items-center flex-1">
-                  <Text className="text-2xl mb-1">{item.icon}</Text>
-                  <Text className="text-white/80 text-xs text-center">{item.text}</Text>
+                  <Text className=" italic text-white/80 text-xs text-center">{item.text}</Text>
                 </View>
               ))}
             </View>
