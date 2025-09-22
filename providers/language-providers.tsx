@@ -84,8 +84,32 @@ loginSuccess: {en: "Login Successfully", am: "በሚገባ ገብተዋል"},
 settings: {en: "Settings", am:'ማውጫ'},
 cancell: {en: 'Cancel', am: "ዝጋ"},
 emergencyIssue: {en: 'Report Emergency', am: 'አስቸኳይ ሪፖርት'},
-activityWillAppearHere: { en: "Your recent activities will appear here", am: "የቅርብ ጊዜ እንቅስቃሴዎችዎ እዚህ ይታያሉ" }};
-
+activityWillAppearHere: { en: "Your recent activities will appear here", am: "የቅርብ ጊዜ እንቅስቃሴዎችዎ እዚህ ይታያሉ" },
+ forgotPassword: { en: "Forgot Password", am: "መክፈቻ ቁልፍ ረሳኽው" },
+  enterEmailToReset: { 
+    en: "Enter your email address and we'll send you instructions to reset your password.", 
+    am: "የኢሜል አድራሻዎን ያስገቡ እና የይለፍ ቃልዎን እንደገና ለማስጀመር መመሪያዎችን እንልክልዎታለን።" 
+  },
+  sendResetLink: { en: "Send Reset Link", am: "የመልስ አገናኝ ይላኩ" },
+  resetEmailSent: { 
+    en: "Reset Email Sent", 
+    am: "የይለፍ ቃል መልስ ኢሜል ተልኳል" 
+  },
+  resetEmailInstructions: { 
+    en: "Check your email for instructions to reset your password.", 
+    am: "የይለፍ ቃልዎን እንደገና ለማስጀመር መመሪያዎችን ለማግኘት ኢሜልዎን ያረጋግጡ።" 
+  },
+  resetEmailError: { 
+    en: "Error sending reset email. Please try again.", 
+    am: "የይለፍ ቃል መልስ ኢሜል በመላክ ላይ ስህተት ተፈጥሯል። እባክዎ እንደገና ይሞክሩ።" 
+  },
+  sending: { en: "Sending", am: "በመላክ ላይ" },
+  error: { en: "Error", am: "ስህተት" },
+  pleaseEnterEmail: { 
+    en: "Please Enter Your Email!", 
+    am: "እባኮ ኢሚል ያስገቡ!" 
+  },
+};
 export type TranslationKey = keyof typeof translations;
 
 // Context type
