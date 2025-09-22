@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, Pressable, Alert } from "react-native";
+import { View, Text, TextInput, Pressable, Alert, Modal } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import Animated, { useSharedValue, useAnimatedStyle, withSpring, FadeInUp } from "react-native-reanimated";
@@ -8,24 +8,28 @@ import { useLanguage } from "@/providers/language-providers";
 import { useAuth } from "@/providers/auth-providers";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-
 export default function Login() {
   const { t } = useLanguage();
   const { login } = useAuth();
   const router = useRouter();
-  // state manegment
+  
+  // State management
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  
+  // Forgot Password State
+  const [forgotPasswordModal, setForgotPasswordModal] = useState(false);
+  const [forgotPasswordEmail, setForgotPasswordEmail] = useState("");
+  const [isSendingReset, setIsSendingReset] = useState(false);
 
-  // animation setup
+  // Animation setup
   const scale = useSharedValue(1);
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
   }));
-
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -37,28 +41,18 @@ export default function Login() {
     setError("");
   
     try {
-      // Call the backend
       const res = await fetch("http://192.168.1.4:3000/auth/login", {
         method: "POST",
-        headers: {
-           "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          email: email,
-           password : password,
-          }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email, password: password }),
       });
 
       const data = await res.json()
 
       if(res.ok && data.access_token && data.user){
-        // save login token 
         await AsyncStorage.setItem("token", data.access_token)
-      // update app state to show user is logged in
         login(data.user, data.access_token)
-
         Alert.alert(t("loginSuccess"), `${t("welcome")} ${data.user.name}!`);
-
-        // navigate to home
         router.replace("/(tabs)")
       } else{
         setError(data.error || t("loginError"));
@@ -70,25 +64,62 @@ export default function Login() {
          setIsLoading(false);
     }
   }
+
+  // Forgot Password Function
+  const handleForgotPassword = async () => {
+    if (!forgotPasswordEmail) {
+      Alert.alert(t("error"), t("pleaseEnterEmail"));
+      return;
+    }
+
+    setIsSendingReset(true);
+
+    try {
+      const res = await fetch("http://192.168.1.4:3000/auth/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: forgotPasswordEmail }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        Alert.alert(
+          t("resetEmailSent"),
+          t("resetEmailInstructions"),
+          [{ text: "OK", onPress: () => setForgotPasswordModal(false) }]
+        );
+        setForgotPasswordEmail("");
+      } else {
+        Alert.alert(t("error"), data.error || t("resetEmailError"));
+      }
+    } catch (error: any) {
+      console.error("Forgot password error:", error.message);
+      Alert.alert(t("error"), t("resetEmailError"));
+    } finally {
+      setIsSendingReset(false);
+    }
+  };
+
   return (
     <LinearGradient colors={["#0a5398ff", "#15bdc6ff"]} style={{ flex: 1, justifyContent: "center" }}>
       <View className="flex-1 justify-center items-center px-6">
         {/* Logo */}
         <Animated.View entering={FadeInUp.delay(100)} className="items-center mb-8">
           <Ionicons name="water-outline" size={64} color="white" />
-          <Text className=" italic text-2xl font-semibold mt-2 text-white">ShegaReport</Text>
+          <Text className="italic text-2xl font-semibold mt-2 text-white">ShegaReport</Text>
         </Animated.View>
 
         {/* Form */}
         <Animated.View entering={FadeInUp.delay(200)} className="bg-gray-200 rounded-2xl w-full p-6 shadow-lg">
           <Text className="text-2xl font-bold text-green-600 text-center mb-4">{t("welcomeBack")}</Text>
-            {/* Email Input */}
+          
+          {/* Email Input */}
           <View className="mb-4">
             <Text className="text-gray-700 mb-2 font-semibold">{t("email")}</Text>
             <View className="flex-row items-center">
               <View className="absolute left-3 z-10">
-              <Ionicons name="mail-outline" size={20} color="gray" />
-
+                <Ionicons name="mail-outline" size={20} color="gray" />
               </View>
               <TextInput
                 className="flex-1 border border-gray-300 rounded-xl pl-10 pr-3 py-3 text-base"
@@ -103,26 +134,39 @@ export default function Login() {
           </View>
 
           {/* Password Input */}
-          <View className="mb-4">
+          <View className="mb-2">
             <Text className="text-gray-700 mb-2 font-semibold">{t("password")}</Text>
-            <View className="flex-row items-center ">
+            <View className="flex-row items-center">
               <View className="absolute left-3 z-10">
-              <Ionicons name="lock-closed-outline" size={20} color="gray" />
-
+                <Ionicons name="lock-closed-outline" size={20} color="gray" />
               </View>
               <TextInput
-                className="flex-1 border border-gray-300 rounded-xl pl-10 pr-3 py-3 text-base"
+                className="flex-1 border border-gray-300 rounded-xl pl-10 pr-10 py-3 text-base"
                 placeholder={t("enterPassword")}
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry={!showPassword}
                 editable={!isLoading}
               />
-              <Pressable onPress={() => setShowPassword(!showPassword)}>
+              <Pressable 
+                className="absolute right-3 z-10"
+                onPress={() => setShowPassword(!showPassword)}
+              >
                 <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={20} color="gray" />
               </Pressable>
             </View>
           </View>
+
+          {/* Forgot Password Link */}
+          <Pressable 
+            onPress={() => !isLoading && setForgotPasswordModal(true)}
+            disabled={isLoading}
+            className="mb-4"
+          >
+            <Text className={`text-right ${isLoading ? "text-gray-400" : "text-green-600 font-semibold"}`}>
+              {t("forgotPassword")}?
+            </Text>
+          </Pressable>
 
           {/* Error */}
           {error ? <Text className="text-red-500 mb-4 text-center">{error}</Text> : null}
@@ -153,7 +197,51 @@ export default function Login() {
           </Pressable>
         </Animated.View>
       </View>
+
+      {/* Forgot Password Modal */}
+      <Modal
+        visible={forgotPasswordModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setForgotPasswordModal(false)}
+      >
+        <View className="flex-1 justify-center items-center bg-black/50 px-6">
+          <Animated.View entering={FadeInUp} className="bg-white rounded-2xl w-full p-6 shadow-lg">
+            <View className="flex-row justify-between items-center mb-4">
+              <Text className="text-xl font-bold text-green-600">{t("forgotPassword")}</Text>
+              <Pressable onPress={() => setForgotPasswordModal(false)}>
+                <Ionicons name="close-outline" size={24} color="gray" />
+              </Pressable>
+            </View>
+            
+            <Text className="text-gray-600 mb-4">
+              {t("enterEmailToReset")}
+            </Text>
+            
+            <View className="mb-4">
+              <TextInput
+                className="border border-gray-300 rounded-xl px-4 py-3 text-base mb-4"
+                placeholder={t("enterEmail")}
+                value={forgotPasswordEmail}
+                onChangeText={setForgotPasswordEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                editable={!isSendingReset}
+              />
+              
+              <Pressable
+                onPress={handleForgotPassword}
+                disabled={isSendingReset}
+                className={`py-3 rounded-xl items-center ${isSendingReset ? "bg-green-400" : "bg-green-600"}`}
+              >
+                <Text className="text-white font-semibold text-lg">
+                  {isSendingReset ? t("sending") + "..." : t("sendResetLink")}
+                </Text>
+              </Pressable>
+            </View>
+          </Animated.View>
+        </View>
+      </Modal>
     </LinearGradient>
   );
 }
-
