@@ -3,7 +3,6 @@
     "name": "ShegaReport",
     "slug": "ShegaReport",
     "version": "1.0.0",
-    "sdkVersion": "53.0.22",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "shegareport",
@@ -59,7 +58,7 @@
           "microphonePermission": false
         }
       ],
-            [
+      [
         "expo-location",
         {
           "locationAlwaysAndWhenInUsePermission": "Allow ShegaReport to use your location to pinpoint water and sanitation issues.",
@@ -67,8 +66,9 @@
           "locationWhenInUsePermission": "Allow ShegaReport to use your location to pinpoint water and sanitation issues.",
           "isAndroidBackgroundLocationEnabled": true
         }
-      ]
-    
+      ],
+      "expo-font",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true

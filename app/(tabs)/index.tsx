@@ -30,7 +30,7 @@ export default function HomeScreen() {
             logout();
             console.log("Logout pressed");
             setTimeout(() => {
-              router.replace('/(auth)/welcome');
+              router.push('/(auth)/welcome');
             }, 100);
           }
         }

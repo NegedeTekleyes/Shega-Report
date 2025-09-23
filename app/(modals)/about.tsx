@@ -2,8 +2,10 @@ import { StyleSheet, Text, View, ScrollView, Linking, TouchableOpacity } from 'r
 import React from 'react'
 import { Ionicons } from "@expo/vector-icons";
 import { router } from 'expo-router';
+import { useTheme } from '@/providers/theme-provider';
 
 export default function AboutScreen() {
+  const {theme} = useTheme()
   const openLink = (url: string) => {
     Linking.openURL(url);
   };

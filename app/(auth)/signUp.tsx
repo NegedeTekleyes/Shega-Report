@@ -23,31 +23,6 @@ export default function SignUp() {
     transform: [{scale: scale.value}]
   }))
 
-  // Mock signup API - REPLACE WITH ACTUAL API
-  // const mockSignupApi = async (name: string, email: string, password: string) => {
-  //   await new Promise(resolve => setTimeout(resolve, 1500));
-    
-  //   if (email && password.length >= 6) {
-  //     return {
-  //       success: true,
-  //       user: {
-  //         id: Math.random().toString(36).substr(2, 9),
-  //         email: email,
-  //         name: name,
-  //         role: 'resident' as const,
-  //         phone: '+251912345678',
-  //         isVerified: false
-  //       },
-  //       token: 'mock-jwt-token-' + Math.random().toString(36).substr(2, 9)
-  //     };
-  //   } else {
-  //     return {
-  //       success: false,
-  //       error: 'Registration failed. Please try again.'
-  //     };
-  //   }
-  // };
-
 
   const signUpApi = async (name: string, email: string, password: string) => {
   try {
@@ -61,12 +36,10 @@ export default function SignUp() {
         password,
         role: "RESIDENT", // or dynamic role if you add selection
         name,             // full name mapped to backend `name`
-        phone: "+251912345678", // optional, hardcoded for now
       }),
     });
 
     if (!response.ok) {
-      // If backend returns error (e.g. 400, 500)
       const errorData = await response.json();
       throw new Error(errorData.message || "Signup failed");
     }
@@ -123,7 +96,7 @@ export default function SignUp() {
 
   return (
     <LinearGradient
-      colors={['#16a34a', '#22c55e']}
+      colors={["#0a5398ff", "#15bdc6ff"]}
       style={{ flex: 1, justifyContent: 'center' }}
     >
       <View className="flex-1 justify-center items-center px-6">
