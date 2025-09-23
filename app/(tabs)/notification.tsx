@@ -121,11 +121,11 @@ export default function NotificationScreen() {
 
     const getNotificationIcon = (type: string)=>{
         switch(type){
-            case 'issue_update': return { name: 'refresh', color: '#3B82F6' };
-            case 'new_issue': return { name: 'warning', color: '#EF4444' };
-            case 'resolution': return { name: 'checkmark-circle', color: '#10B981' };
-            case 'system': return { name: 'information', color: '#8B5CF6' };
-            default: return { name: 'notifications', color: '#6B7280' }; 
+            case 'issue_update': return { name: 'refresh', color: '#0a0303ff' };
+            case 'new_issue': return { name: 'warning', color: '#100606ff' };
+            case 'resolution': return { name: 'checkmark-circle', color: '#100606ff' };
+            case 'system': return { name: 'information', color: '#100606ff' };
+            default: return { name: 'notifications', color: '#100606ff' }; 
         }
       }
 
@@ -246,7 +246,7 @@ export default function NotificationScreen() {
                     <Animated.View
                       key={notification.id}
                       entering={FadeInUp.delay(index * 100)}
-                      className={`bg-white rounded-xl p-4 mb-3 shadow-sm ${!notification.read ? 'border-l-4 border-green-500' : ''}`}
+                      className={`bg-[#15bdc6ff] rounded-xl p-4 mb-3 shadow-sm ${!notification.read ? 'border-l-4 border-green-500' : ''}`}
                     >
                       <View className="flex-row items-start space-x-3">
                         <View 
