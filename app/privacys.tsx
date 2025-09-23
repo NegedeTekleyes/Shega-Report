@@ -1,4 +1,3 @@
-// app/(tabs)/privacy.tsx
 import React from 'react';
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -29,37 +28,37 @@ export default function PrivacyScreen() {
   const content = privacyContent[language];
 
   return (
-    <View className="flex-1 bg-gray-50">
+    <View className="flex-1 bg-gray-300">
       {/* Header */}
-      <View className="bg-green-600 px-6 pt-12 pb-4">
+      <View className="bg-[#0a5398ff] px-6 pt-12 pb-4">
         <View className="flex-row items-center mb-4">
           <TouchableOpacity onPress={() => router.back()} className="mr-4">
             <Ionicons name="arrow-back" size={24} color="white" />
           </TouchableOpacity>
-          <Text className="text-white text-2xl font-bold">
+          <Text className="text-white text-xl font-bold">
             {language === 'en' ? 'Privacy Policy' : 'የግላዊነት ፖሊሲ'}
           </Text>
         </View>
       </View>
 
       <ScrollView className="flex-1 px-6 py-6">
-        <View className="bg-white rounded-2xl p-6 shadow-sm">
-          <Text className="text-2xl font-bold text-gray-800 mb-6 text-center">
+        <View className="bg-[#15bdc6ff] rounded-2xl p-6 shadow-sm">
+          <Text className="text-xl font-bold text-gray-800 mb-6 text-center">
             {language === 'en' ? 'Privacy Policy' : 'የግላዊነት ፖሊሲ'}
           </Text>
 
           {content.map((item, index) => (
             <View key={index} className="mb-6">
-              <Text className="text-lg font-semibold text-green-600 mb-2">
+              <Text className="text-lg font-semibold text-black-600 mb-2">
                 {item.title}
               </Text>
-              <Text className="text-gray-600 leading-6">
+              <Text className="text-gray-800 leading-6">
                 {item.content}
               </Text>
             </View>
           ))}
 
-          <Text className="text-gray-500 text-sm text-center mt-8">
+          <Text className="text-gray-800 text-sm text-center mt-8">
             {language === 'en' 
               ? 'Last updated: September 2025'
               : 'የመጨረሻ ማዘመን: መስከረም 2025'
