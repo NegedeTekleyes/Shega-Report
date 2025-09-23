@@ -2,7 +2,6 @@ import { Alert, Linking, ScrollView, Switch, Text, TouchableOpacity, View } from
 import React, { useState } from 'react'
 import { useAuth } from '@/providers/auth-providers'
 import { useLanguage } from '@/providers/language-providers'
-import { useTheme } from '@/providers/theme-provider'
 import { router } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 
@@ -23,27 +22,27 @@ interface SettingsSection {
 
 export default function SettingScreen() {
     const { user, logout } = useAuth()
-    const { language, changeLanguage } = useLanguage()
-    const { theme, setThemeMode } = useTheme()
+    const { t, language, changeLanguage } = useLanguage()
     
     const [settings, setSettings] = useState({
         notifications: true,
         locationServices: true,
         dataSaver: false,
-        autoUpdate: true
+        autoUpdate: true,
+        darkMode: false
     })
 
     const handleLogout = () => {
         Alert.alert(
-            language === 'en' ? 'Logout' : 'ውጣ',
-            language === 'en' ? 'Are you sure you want to logout?' : 'እርግጠኛ ነዎት መውጣት ይፈልጋሉ?',
+            t('logout'),
+            t('logoutConfirm'),
             [
                 { 
-                    text: language === 'en' ? 'Cancel' : 'ሰርዝ', 
+                    text: t('cancel'), 
                     style: 'cancel' 
                 },
                 { 
-                    text: language === 'en' ? 'Logout' : 'ውጣ', 
+                    text: t('logout'), 
                     onPress: () => {
                         logout()
                         router.replace('/(auth)/login')
@@ -59,63 +58,63 @@ export default function SettingScreen() {
 
     const handleRateApp = () => {
         Alert.alert(
-            language === 'en' ? 'Rate App' : 'መተግበሪያውን ደረጅ ይግለጹ',
-            language === 'en' ? 'Thank you for using ShegaReport!' : 'ሸጋሪፖርት ስለተጠቀሙ አመሰግናለሁ!'
+            t('rateApp'),
+            t('thankYou')
         )
     }
 
     const copyAppVersion = async () => {
         Alert.alert(
-            language === 'en' ? 'App Version' : 'የመተግበሪያ ስሪት',
+            t('appVersion'),
             'ShegaReport v1.0.0',
-            [{ text: language === 'en' ? 'OK' : 'እሺ' }]
+            [{ text: t('ok') }]
         )
     }
 
     const settingsSections: SettingsSection[] = [
         {
-            title: language === 'en' ? 'Preferences' : 'ምርጫዎች',
+            title: t('preferences'),
             items: [
                 {
                     icon: 'notifications',
-                    label: language === 'en' ? 'Notifications' : 'ማስታወቂያዎች',
+                    label: t('notifications'),
                     type: 'switch',
                     value: settings.notifications,
                     onValueChange: (value) => setSettings(prev => ({ ...prev, notifications: value }))
                 },
                 {
                     icon: 'language',
-                    label: language === 'en' ? 'Language' : 'ቋንቋ',
+                    label: t('language'),
                     type: 'action',
                     onPress: () => changeLanguage(language === 'en' ? 'am' : 'en')
                 },
-                {
-                    icon: 'moon',
-                    label: language === 'en' ? 'Dark Mode' : 'ጨለማ ሞድ',
-                    type: 'switch',
-                    value: theme.isDark,
-                    onValueChange: (value) => setThemeMode(value)
-                }
+                // {
+                //     icon: 'moon',
+                //     label: t('darkMode'),
+                //     type: 'switch',
+                //     value: settings.darkMode,
+                //     onValueChange: (value) => setSettings(prev => ({ ...prev, darkMode: value }))
+                // }
             ]
         },
         {
-            title: language === 'en' ? 'Privacy & Security' : 'ግላዊነት እና ደህንነት',
+            title: t('privacySecurity'),
             items: [
                 {
                     icon: 'lock-closed',
-                    label: language === 'en' ? 'Privacy Policy' : 'የግላዊነት ፖሊሲ',
+                    label: t('privacyPolicy'),
                     type: 'action',
                     onPress: () => router.push('/privacys')
                 },
                 {
                     icon: 'shield-checkmark',
-                    label: language === 'en' ? 'Terms of Service' : 'የአገልግሎት ውሎች',
+                    label: t('termsOfService'),
                     type: 'action',
                     onPress: () => router.push('/terms')
                 },
                 {
                     icon: 'location',
-                    label: language === 'en' ? 'Location Services' : 'የአካባቢ አገልግሎቶች',
+                    label: t('locationServices'),
                     type: 'switch',
                     value: settings.locationServices,
                     onValueChange: (value) => setSettings(prev => ({ ...prev, locationServices: value }))
@@ -123,50 +122,50 @@ export default function SettingScreen() {
             ]
         },
         {
-            title: language === 'en' ? 'Support' : 'ድጋፍ',
+            title: t('support'),
             items: [
                 {
                     icon: 'help-circle',
-                    label: language === 'en' ? 'Help Center' : 'የእርዳታ ማዕከል',
+                    label: t('helpCenter'),
                     type: 'action',
                     onPress: () => router.push('/help')
                 },
                 {
                     icon: 'chatbubble-ellipses',
-                    label: language === 'en' ? 'Contact Support' : 'ድጋፍ ያግኙ',
+                    label: t('contactSupport'),
                     type: 'action',
                     onPress: handleContactSupport
                 },
                 {
                     icon: 'document-text',
-                    label: language === 'en' ? 'Report a Problem' : 'ችግር ይግለጹ',
+                    label: t('reportProblem'),
                     type: 'action',
                     onPress: () => router.push('/reports')
                 }
             ]
         },
         {
-            title: language === 'en' ? 'About' : 'ስለ',
+            title: t('about'),
             items: [
                 {
                     icon: 'information',
-                    label: language === 'en' ? 'About App' : 'ስለ መተግበሪያው',
+                    label: t('aboutApp'),
                     type: 'action',
                     onPress: () => router.push('/(modals)/about')
                 },
                 {
                     icon: 'star',
-                    label: language === 'en' ? 'Rate App' : 'መተግበሪያውን ደረጅ ይግለጹ',
+                    label: t('rateApp'),
                     type: 'action',
                     onPress: handleRateApp
                 },
                 {
                     icon: 'share-social',
-                    label: language === 'en' ? 'Share App' : 'መተግበሪያውን አጋራ',
+                    label: t('shareApp'),
                     type: 'action',
                     onPress: () => Alert.alert(
-                        language === 'en' ? 'Share' : 'አጋራ', 
-                        language === 'en' ? 'Sharing feature coming soon!' : 'የማጋራት ባህሪ በቅርብ ጊዜ ይመጣል!'
+                        t('share'), 
+                        t('sharingComingSoon')
                     )
                 }
             ]
@@ -174,98 +173,51 @@ export default function SettingScreen() {
     ]
 
     return (
-        <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
+        <View className="flex-1 bg-gray-400">
             {/* Header */}
-            <View style={{ 
-                paddingHorizontal: 24, 
-                paddingTop: 48, 
-                paddingBottom: 16, 
-                backgroundColor: theme.isDark ? '#1F2937' : '#10B981' 
-            }}>
-                <Text style={{ 
-                    fontSize: 24, 
-                    fontWeight: 'bold', 
-                    color: 'white' 
-                }}>
-                    {language === 'en' ? 'Settings' : 'ቅንብሮች'}
+            <View className="px-6 pt-12 pb-4 bg-[#0a5398ff]">
+                <Text className="text-xl font-bold text-white">
+                    {t('settings')}
                 </Text>
-                <Text style={{ 
-                    color: theme.isDark ? '#D1D5DB' : '#D1FAE5',
-                    fontSize: 14
-                }}>
-                    {language === 'en' ? 'Customize your experience' : 'ተሞክሮዎን ያብጁ'}
+                <Text className="text-green-100 text-sm mt-1">
+                    {t('customizeExperience')}
                 </Text>
             </View>
 
-            <ScrollView style={{ flex: 1, paddingHorizontal: 16, paddingBottom: 16 }}>
+            <ScrollView className="flex-1 px-4 pb-4">
                 {/* Account Section */}
-                <View style={{ 
-                    borderRadius: 12, 
-                    padding: 16, 
-                    marginTop: 16, 
-                    backgroundColor: theme.colors.card 
-                }}>
-                    <Text style={{ 
-                        fontSize: 18, 
-                        fontWeight: '600', 
-                        marginBottom: 12,
-                        color: theme.colors.text 
-                    }}>
-                        {language === 'en' ? 'Account' : 'መለያ'}
+                <View className="rounded-xl p-4 mt-4 bg-[#15bdc6ff] shadow-sm border border-gray-100">
+                    <Text className="text-lg font-semibold mb-3 text-gray-900">
+                        {t('account')}
                     </Text>
                     
-                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
-                        <View style={{ 
-                            width: 48, 
-                            height: 48, 
-                            backgroundColor: '#D1FAE5', 
-                            borderRadius: 24, 
-                            justifyContent: 'center', 
-                            alignItems: 'center',
-                            marginRight: 12
-                        }}>
-                            <Text style={{ color: '#059669', fontSize: 18, fontWeight: 'bold' }}>
+                    <View className="flex-row items-center mb-4">
+                        <View className="w-12 h-12 bg-green-100 rounded-full justify-center items-center mr-3">
+                            <Text className="text-green-700 text-lg font-bold">
                                 {user?.name?.charAt(0)?.toUpperCase()}
                             </Text>
                         </View>
-                        <View style={{ flex: 1 }}>
-                            <Text style={{ 
-                                fontWeight: '600',
-                                color: theme.colors.text 
-                            }}>
+                        <View className="flex-1">
+                            <Text className="font-semibold text-gray-900">
                                 {user?.name}
                             </Text>
-                            <Text style={{ 
-                                fontSize: 14,
-                                color: theme.colors.textSecondary 
-                            }}>
+                            <Text className="text-sm text-gray-800">
                                 {user?.email}
                             </Text>
-                            <Text style={{ 
-                                fontSize: 12, 
-                                textTransform: 'capitalize',
-                                color: theme.colors.textSecondary 
-                            }}>
+                            <Text className="text-xs text-gray-700 capitalize">
                                 {user?.role}
                             </Text>
                         </View>
                     </View>
 
                     <TouchableOpacity 
-                        style={{ 
-                            flexDirection: 'row', 
-                            alignItems: 'center', 
-                            justifyContent: 'space-between', 
-                            paddingVertical: 12,
-                            borderTopWidth: 1,
-                            borderTopColor: theme.colors.border
-                        }}
+                        className="flex-row items-center justify-between py-3 border-t border-gray-100"
                         onPress={handleLogout}
                     >
-                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                            <Ionicons name="log-out" size={20} color="#EF4444" />
-                            <Text style={{ color: '#EF4444', marginLeft: 12 }}>
-                                {language === 'en' ? 'Logout' : 'ውጣ'}
+                        <View className="flex-row items-center">
+                            <Ionicons name="log-out" size={20} color="#160404ff" />
+                            <Text className="text-black font-bold ml-3">
+                                {t('logout')}
                             </Text>
                         </View>
                     </TouchableOpacity>
@@ -275,47 +227,29 @@ export default function SettingScreen() {
                 {settingsSections.map((section, sectionIndex) => (
                     <View 
                         key={sectionIndex} 
-                        style={{ 
-                            borderRadius: 12, 
-                            padding: 16, 
-                            marginTop: 16, 
-                            backgroundColor: theme.colors.card 
-                        }}
+                        className="rounded-xl p-4 mt-4 bg-[#15bdc6ff] shadow-sm border border-gray-100"
                     >
-                        <Text style={{ 
-                            fontSize: 18, 
-                            fontWeight: '600', 
-                            marginBottom: 16,
-                            color: theme.colors.text 
-                        }}>
+                        <Text className="text-lg font-semibold mb-4 text-gray-900">
                             {section.title}
                         </Text>
                         
                         {section.items.map((item, itemIndex) => (
                             <TouchableOpacity
                                 key={itemIndex}
-                                style={{ 
-                                    flexDirection: 'row', 
-                                    alignItems: 'center', 
-                                    justifyContent: 'space-between', 
-                                    paddingVertical: 12,
-                                    borderBottomWidth: itemIndex < section.items.length - 1 ? 1 : 0,
-                                    borderBottomColor: theme.colors.border
-                                }}
+                                className={`flex-row items-center justify-between py-3 ${
+                                    itemIndex < section.items.length - 1 ? 'border-b border-gray-100' : ''
+                                }`}
                                 onPress={item.onPress}
                                 disabled={item.type === 'switch'}
                             >
-                                <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                                <View className="flex-row items-center flex-1">
                                     <Ionicons 
                                         name={item.icon as any} 
                                         size={20} 
-                                        color={theme.colors.textSecondary} 
-                                        style={{ marginRight: 12 }}
+                                        color="#6B7280" 
+                                        className="mr-3"
                                     />
-                                    <Text style={{ 
-                                        flex: 1,
-                                        color: theme.colors.text 
-                                    }}>
+                                    <Text className="flex-1 text-gray-900">
                                         {item.label}
                                     </Text>
                                 </View>
@@ -324,10 +258,10 @@ export default function SettingScreen() {
                                     <Switch
                                         value={item.value}
                                         onValueChange={item.onValueChange}
-                                        trackColor={{ false: '#D1D5DB', true: '#10B981' }}
+                                        trackColor={{ false: '#5b95ecff', true: '#0c5feeff' }}
                                     />
                                 ) : (
-                                    <Ionicons name="chevron-forward" size={20} color={theme.colors.textSecondary} />
+                                    <Ionicons name="chevron-forward" size={20} color="#6B7280" />
                                 )}
                             </TouchableOpacity>
                         ))}
@@ -335,23 +269,12 @@ export default function SettingScreen() {
                 ))}
 
                 {/* App Version */}
-                <TouchableOpacity onPress={copyAppVersion} style={{ alignItems: 'center', marginTop: 24 }}>
-                    <Text style={{ 
-                        fontSize: 14,
-                        color: theme.colors.textSecondary 
-                    }}>
+                <TouchableOpacity onPress={copyAppVersion} className="items-center mt-6">
+                    <Text className="text-sm text-gray-900">
                         ShegaReport v1.0.0
                     </Text>
-                    <Text style={{ 
-                        fontSize: 12, 
-                        marginTop: 4,
-                        marginBottom: 8,
-                        color: theme.colors.textSecondary 
-                    }}>
-                        {language === 'en' 
-                            ? 'Serving Debre Birhan Community'
-                            : 'ለደብረ ብርሃን ማህበረሰብ አገልግሎት'
-                        }
+                    <Text className="text-xs mt-1 mb-2 text-gray-900">
+                        {t('servingCommunity')}
                     </Text>
                 </TouchableOpacity>
             </ScrollView>
