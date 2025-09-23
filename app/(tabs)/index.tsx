@@ -14,29 +14,36 @@ export default function HomeScreen() {
   const [menuVisible, setMenuVisible] = useState(false)
   const router = useRouter();
 
-  const handleLogout = () => {
-    Alert.alert(
-      t('logout'),
-      t('confirmLogout'),
-      [
-        { 
-          text: t('cancel'), 
-          style: 'cancel',
-          onPress: () => console.log('Cancel pressed') 
-        },
-        { 
-          text: t('logout'), 
-          onPress: () => {
-            logout();
-            console.log("Logout pressed");
-            setTimeout(() => {
-              router.push('/(auth)/welcome');
-            }, 100);
+ const handleLogout = async () => {
+  Alert.alert(
+    t('logout'),           // Title
+    t('confirmLogout'),    // Message
+    [
+      {
+        text: t('cancel'),
+        style: 'cancel',
+      },
+      {
+        text: t('logout'),
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            // Clear auth state
+            await logout();  // Make sure logout clears user context / token
+            
+            // Navigate to welcome screen
+            router.replace('/(auth)/welcome');
+          } catch (error) {
+            console.error('Logout error:', error);
+            Alert.alert(t('error'), t('confirmLogout'));
           }
-        }
-      ]
-    );
-  };
+        },
+      },
+    ],
+    { cancelable: true }
+  );
+};
+
 
   const stats = [
     { 
@@ -112,71 +119,86 @@ export default function HomeScreen() {
     } 
   ];
 
+  const getRoleStyles = (role?: string)=> {
+    switch(role){
+      case 'admin':
+        return {bg: 'bg-red-100', text: 'text-red-800'}
+      case 'technician':
+        return {bg: 'bg-blue-400', text: 'text-red-800'}
+        default:
+        return {bg: 'bg-green-100', text: 'text-green-800'}
+    }
+  }
+
+  const roleStyles = getRoleStyles(user?.role)
   return (
     <View className="flex-1 bg-gray-50">
       {/* Header with Gradient */}
       <LinearGradient
-        colors={['#009639', '#00B341']}
+        colors={['#0a5398ff','#15bdc6ff']}
         className="px-6 pt-12 pb-8 rounded-b-3xl"
       >
         <View className="flex-row justify-between items-center mb-6">
           <View>
             <Text className="text-white text-2xl font-bold">ShegaReport</Text>
-            <Text className="text-green-100 text-sm">
+            <Text className="text-blue-100 text-sm">
               {t('waterManagement')}
             </Text>
           </View>
           
           {/* profile avater */}
-          <View>
+          <View className='relative'>
             <TouchableOpacity
             onPress={() => setMenuVisible(true)}
-            className='w-10 h-10 bg-white/20 rounded-full justify-center items-center'
+            className='w-10 h-10 bg-white/20 rounded-full justify-center items-center border-2 border-white/30'
             >
               <Text className='text-white font-bold text-lg'>
-                {user?.name?.charAt(0)?.toUpperCase()}
+                {user?.name?.charAt(0)?.toUpperCase() || 'U'}
               </Text>
             </TouchableOpacity>
             {/* dropdown modal */}
             <Modal
-        visible={menuVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setMenuVisible(false)}
-      >
-        <TouchableOpacity
-          className="flex-1 bg-black/40"
-          activeOpacity={1}
-          onPressOut={() => setMenuVisible(false)}
-        >
+                visible={menuVisible}
+                transparent
+                animationType="fade"
+                onRequestClose={() => setMenuVisible(false)}
+              >
+                <View className="flex-1">
+                {/* Backdrop that closes modal */}
+                <TouchableOpacity
+                  className="flex-1 bg-black/40"
+                  activeOpacity={1}
+                  onPress={() => setMenuVisible(false)}
+                />
           <View className="absolute top-14 right-4 bg-white rounded-xl shadow-lg p-3 w-40">
             <TouchableOpacity
               className="flex-row items-center p-2"
               onPress={() => {
                 setMenuVisible(false);
-                // navigate to profile page
                 router.push('/(tabs)/profile')
               }}
             >
               <Ionicons name="person-circle-outline" size={20} color="black" />
               <Text className="ml-2 text-black">Profile</Text>
             </TouchableOpacity>
-
+              <View className='h-px bg-gray-200 my-1'/>
             <TouchableOpacity
-              className="flex-row items-center p-2"
-              onPress={() => {
-                setMenuVisible(false);
-                handleLogout();
-              }}
-            >
-              <Ionicons name="log-out-outline" size={20} color="black" />
-              <Text className="ml-2 text-black">Logout</Text>
-            </TouchableOpacity>
-          </View>
-        </TouchableOpacity>
-      </Modal>
+  className="flex-row items-center px-4 py-3 rounded-lg active:bg-gray-100"
+  onPress={() => {
+    console.log('Logout pressesd')
+    // setMenuVisible(false);  // close menu immediately
+    handleLogout();          // call logout confirmation
+  }}
+>
+  <Ionicons name="log-out-outline" size={20} color="black" />
+  <Text className="ml-2 text-black">Logout</Text>
+</TouchableOpacity>
+
           </View>
         </View>
+      </Modal>
+    </View>
+  </View>
 
         {/* Welcome Section */}
         <Animated.View 
@@ -190,15 +212,9 @@ export default function HomeScreen() {
             {user?.email}
           </Text>
           <View className="flex-row items-center justify-between">
-            <View className={`px-4 py-2 rounded-full ${
-              user?.role === 'admin' ? 'bg-red-100' : 
-              user?.role === 'technician' ? 'bg-blue-100' : 'bg-green-100'
-            }`}>
-              <Text className={`text-xs font-semibold ${
-                user?.role === 'admin' ? 'text-red-800' : 
-                user?.role === 'technician' ? 'text-blue-800' : 'text-green-800'
-              }`}>
-                {user?.role?.toUpperCase()}
+            <View className={`px-4 py-2 rounded-full ${roleStyles.bg}` }>
+              <Text className={`text-xs font-semibold ${roleStyles.text}`}>
+                {user?.role?.toUpperCase() || 'USER'}
               </Text>
             </View>
             <View className="flex-row items-center">
@@ -211,22 +227,22 @@ export default function HomeScreen() {
 
       <ScrollView className="flex-1 px-5" showsVerticalScrollIndicator={false}>
         {/* Statistics Cards */}
-        <Text className="text-2xl font-bold mt-6 mb-4 text-gray-800">
+        <Text className="text-xl font-bold mt-6 mb-4 text-gray-800">
            {t('overview')}
         </Text>
         
-        <View className="flex-row justify-between mb-6 -mx-1">
+        <View className="flex-row justify-between mb-6 -mx-1.5">
           {stats.map((stat, index) => (
             <Animated.View
               key={stat.label}
               entering={FadeInDown.delay(300 + index * 100)}
-              className="flex-1 mx-1"
+              className="w-[31%] mx-1.5 mb-3"
             >
               <LinearGradient
                 colors={stat.gradient}
-                className="p-4 rounded-2xl shadow-lg"
+                className="p-4 rounded-2xl shadow-lg aspect-square min-h-[120px]"
               >
-                <View className="items-center">
+                <View className="items-center justify-center h-full">
                   <View className="w-12 h-12 bg-white/20 rounded-full justify-center items-center mb-2">
                     <Ionicons name={stat.icon} size={24} color="white" />
                   </View>
@@ -243,8 +259,7 @@ export default function HomeScreen() {
         </View>
 
         {/* Quick Actions */}
-{/* Quick Actions */}
-<Text className="text-2xl font-bold mb-4 text-gray-800">
+<Text className="text-xl font-bold mb-4 text-gray-800">
   {t('quickActions')}
 </Text>
 
@@ -289,7 +304,7 @@ export default function HomeScreen() {
 
 
         {/* Recent Activity */}
-        <Text className="text-2xl font-bold mb-4 text-gray-800">
+        <Text className="text-xl font-bold mb-4 text-gray-800">
           {t('recentActivity')}
         </Text>
         
