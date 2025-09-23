@@ -1,3 +1,4 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { createContext, ReactNode, useContext, useEffect, useState } from "react";
 import { Platform } from "react-native";
 
@@ -67,9 +68,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const logout = async () => {
-    setUser(null);
-    await storage.removeItem("user");
-    await storage.removeItem("token");
+    try {
+      await AsyncStorage.removeItem("authToken")
+      setUser(null);
+    } catch (error) {
+      console.error("Logout Failed", error)
+      throw error
+    }
+    // await storage.removeItem("user");
+    // await storage.removeItem("token");
   };
  
   return (
