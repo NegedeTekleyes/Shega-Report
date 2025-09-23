@@ -283,7 +283,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   header: {
-    backgroundColor: '#059669',
+    backgroundColor: '#0a5398ff',
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 20,
@@ -330,7 +330,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   submitButton: {
-    backgroundColor: '#059669',
+    backgroundColor: '#0a5398ff',
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 12,
