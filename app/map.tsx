@@ -124,12 +124,12 @@ export default function MapScreen() {
   };
 
   return (
-    <View className="flex-1 bg-gray-50">
+    <View className="flex-1 bg-gray-200">
       {/* Header */}
-      <View className="bg-green-600 px-6 pt-12 pb-4">
+      <View className="bg-[#0a5398ff] px-6 pt-12 pb-4">
         <View className="flex-row items-center justify-between mb-4">
           <View>
-            <Text className="text-white text-2xl font-bold">
+            <Text className="text-white text-xl font-bold">
               {language === 'en' ? 'Water Issues Map' : 'የውሃ ችግሮች ካርታ'}
             </Text>
             <Text className="text-green-100 text-sm">
@@ -231,7 +231,7 @@ export default function MapScreen() {
           </Text>
           
           {filteredIssues.length === 0 ? (
-            <View className="bg-white p-6 rounded-xl items-center">
+            <View className="bg-[#15bdc6ff] p-6 rounded-xl items-center">
               <Ionicons name="search" size={32} color="#9CA3AF" />
               <Text className="text-gray-500 mt-2 text-center">
                 {language === 'en' 
@@ -280,7 +280,7 @@ export default function MapScreen() {
 
       {/* Selected Issue Modal */}
       {selectedIssue && (
-        <View className="absolute inset-0 bg-black/50 justify-center items-center px-4">
+        <View className="absolute inset-0 bg-[#15bdc6ff] justify-center items-center px-4">
           <Animated.View 
             entering={FadeInUp}
             className="bg-white rounded-2xl p-6 w-full max-w-md"
