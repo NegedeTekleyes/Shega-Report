@@ -1,4 +1,4 @@
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { Alert, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import React, { useState } from 'react'
 import { useLanguage } from '@/providers/language-providers';
 import { useRouter } from 'expo-router';
@@ -6,6 +6,24 @@ import { Ionicons } from '@expo/vector-icons';
 import { Switch } from 'react-native';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 
+
+// type script interface
+interface Notification {
+  id: string;
+  type: string
+  title: string
+  message: string
+  time: Date
+  read: boolean
+  priority: string
+}
+interface NotificationSettings {
+  issueUpdates: boolean;
+  newIssuesNearby: boolean;
+  resolutions: boolean;
+  systemAlerts: boolean;
+  emergencyAlerts: boolean;
+}
 
 
 // Mock notification data
@@ -48,6 +66,7 @@ const mockNotifications = [
   }
 ];
 export default function NotificationScreen() {
+  const [refreshing, setRefreshing] =  useState(false)
     const {language}=useLanguage()
     const router = useRouter()
     const [notifications, setNotifications] = useState(mockNotifications)
@@ -57,7 +76,7 @@ export default function NotificationScreen() {
                 resolutions: true,
                 systemAlerts: true,
                 emergencyAlerts: true
-    })
+               })
     const markAsRead = (id: string) => {
         setNotifications(prev =>
             prev.map(notif => 
@@ -72,7 +91,32 @@ export default function NotificationScreen() {
     }
 
     const clearAll = () => {
+      Alert.alert(
+          language === 'en' ? 'Clear All Notifications' : 'ሁሉንም ማስታወቂያዎች አጥፋ',
+          language === 'en' 
+            ? 'Are you sure you want to clear all notifications?'
+            : 'ሁሉንም ማስታወቂያዎች ማጥፋት ይፈልጋሉ?',
+          [
+            {
+              text: language === 'en' ? 'Cancel' : 'ሰርዝ',
+              style: 'cancel',
+            },
+            {
+              text: language === 'en' ? 'Clear All' : 'ሁሉንም አጥፋ',
+              style: 'destructive',
+              onPress: () => setNotifications([])
+            }
+          ]
+       );
         setNotifications([])
+    }
+
+    const onRefresh =()=>{
+      setRefreshing(true)
+      // simulate api call
+      setTimeout(()=>{
+        setRefreshing(false)
+      }, 1000)
     }
 
     const getNotificationIcon = (type: string)=>{
@@ -83,7 +127,7 @@ export default function NotificationScreen() {
             case 'system': return { name: 'information', color: '#8B5CF6' };
             default: return { name: 'notifications', color: '#6B7280' }; 
         }
-    }
+      }
 
     const formatTime = (date: Date)=>{
         const now = new Date()
@@ -98,13 +142,12 @@ export default function NotificationScreen() {
 
     const unreadCount = notifications.filter(n => !n.read).length
   return (
-    <View className='flex-1 bg-gray-50'>
-        {/* header */}
-        <View className='bg-green-600 px-6 pt-12 pb-4'>
+    <View className='flex-1 bg-gray-400'>
+        <View className='bg-[#0a5398ff] px-6 pt-12 pb-4'>
             <View className='flex-row items-center justify-between mb-4'>
                 <View>
 
-                     <Text className='text-white text-2xl font-bold'>
+                     <Text className='text-white text-xl font-bold'>
                         {language === 'en'? 'Notifications': 'ማስታወቂያዎች'}
                      </Text>
                     <Text className="text-green-100 text-sm">
@@ -133,25 +176,37 @@ export default function NotificationScreen() {
                 </View>
             </View>
         </View>
-        <ScrollView className='flex-1 px-4'>
-                    {/* notification setting */}
-                    <View className='bg-white rounded-xl p-4 mt-4 shadow-sm'>
-                        <Text className='text-lg dont-semibold text-gray-800 mb-3'>
-                             {language === 'en' ? 'Notification Settings' : 'የማስታወቂያ ቅንብሮች'}
-                            </Text>
+        <ScrollView className='flex-1 px-4'
+        refreshControl={
+          <RefreshControl 
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          colors={['#0a5398ff']}
+          tintColor="10B981"/>
+        }
+        >
+             {/* notification setting */}
+                <View className='bg-[#15bdc6ff] rounded-xl p-4 mt-4 shadow-sm'>
+                   <Text className='text-lg dont-semibold text-gray-800 mb-3'>
+                          {language === 'en' ? 'Notification Settings' : 'የማስታወቂያ ቅንብሮች'}
+                     </Text>
                     {[
-            { key: 'issueUpdates', label: language === 'en' ? 'Issue Updates' : 'የችግር ማዘመኛዎች' },
-            { key: 'newIssuesNearby', label: language === 'en' ? 'New Issues Nearby' : 'አዲስ ችግሮች በአካባቢዎ' },
-            { key: 'resolutions', label: language === 'en' ? 'Resolutions' : 'ፍትሆች' },
-            { key: 'systemAlerts', label: language === 'en' ? 'System Alerts' : 'የስርዓት ማስጠንቀቂያዎች' },
-            { key: 'emergencyAlerts', label: language === 'en' ? 'Emergency Alerts' : 'አስቸኳይ ማስጠንቀቂያዎች' }
-          ].map((setting, index) => (
+                  { key: 'issueUpdates', label: language === 'en' ? 'Issue Updates' : 'የችግር ማዘመኛዎች' },
+                  { key: 'newIssuesNearby', label: language === 'en' ? 'New Issues Nearby' : 'አዲስ ችግሮች በአካባቢዎ' },
+                  { key: 'resolutions', label: language === 'en' ? 'Resolutions' : 'ፍትሆች' },
+                  { key: 'systemAlerts', label: language === 'en' ? 'System Alerts' : 'የስርዓት ማስጠንቀቂያዎች' },
+                  { key: 'emergencyAlerts', label: language === 'en' ? 'Emergency Alerts' : 'አስቸኳይ ማስጠንቀቂያዎች' }
+                ].map((setting, index) => (
             <View key={setting.key} className={`flex-row items-center justify-between py-3 ${index < 4 ? 'border-b border-gray-100' : ''}`}>
               <Text className="text-gray-700">{setting.label}</Text>
               <Switch
-                value={notificationSettings[setting.key]}
-                onValueChange={(value) => setNotificationSettings(prev => ({ ...prev, [setting.key]: value }))}
-                trackColor={{ false: '#D1D5DB', true: '#10B981' }}
+                value={notificationSettings[setting.key as keyof NotificationSettings]}
+                onValueChange={(value) => setNotificationSettings(prev => ({
+                   ...prev, 
+                   [setting.key]: value 
+                  }))}
+                trackColor={{ false: '#6a90c9ff', true: '#07729fff' }}
+                thumbColor={notificationSettings[setting.key as keyof NotificationSettings]? '#ffffff': '#f4f3f4'}
               />
             </View>
           ))}
@@ -163,64 +218,72 @@ export default function NotificationScreen() {
             {language === 'en' ? 'Recent Notifications' : 'የቅርብ ጊዜ ማስታወቂያዎች'}
           </Text>
 
-          {notifications.length === 0 ? (
-            <View className="bg-white rounded-xl p-8 items-center">
-              <Ionicons name="notifications-off" size={48} color="#9CA3AF" />
-              <Text className="text-gray-500 text-lg font-medium mt-4">
-                {language === 'en' ? 'No notifications' : 'ምንም ማስታወቂያዎች የሉም'}
-              </Text>
-              <Text className="text-gray-400 text-center mt-2">
-                {language === 'en' 
-                  ? 'You\'ll see important updates here'
-                  : 'አስፈላጊ ማዘመኛዎችን እዚህ ያገኛሉ'
-                }
-              </Text>
-            </View>
-          ) : (
-            notifications.map((notification, index) => {
-              const icon = getNotificationIcon(notification.type);
-              return (
-                <Animated.View
-                  key={notification.id}
-                  entering={FadeInUp.delay(index * 100)}
-                  className={`bg-white rounded-xl p-4 mb-3 shadow-sm ${!notification.read ? 'border-l-4 border-green-500' : ''}`}
-                >
-                  <View className="flex-row items-start space-x-3">
-                    <View 
-                      className="w-10 h-10 rounded-full justify-center items-center mt-1"
-                      style={{ backgroundColor: `${icon.color}20` }}
+         {notifications.length === 0 ? (
+                <View className="bg-[#15bdc6ff] rounded-xl p-8 items-center">
+                  <Ionicons name="notifications-off" size={64} color="#E5E7EB" />
+                  <Text className="text-gray-800 text-lg font-medium mt-4 text-center">
+                    {language === 'en' ? 'No notifications yet' : 'እስካሁን ምንም ማስታወቂያዎች የሉም'}
+                  </Text>
+                  <Text className="text-gray-800 text-center mt-2 text-sm">
+                    {language === 'en' 
+                      ? 'Important updates about your reports will appear here'
+                      : 'ስለ ሪፖርቶችዎ አስፈላጊ ማዘመኛዎች እዚህ ይታያሉ'
+                    }
+                  </Text>
+                  <TouchableOpacity 
+                    className="mt-4 bg-green-50 px-4 py-2 rounded-full"
+                    onPress={() => router.push('/reports')}
+                  >
+                    <Text className="text-green-600 font-medium">
+                      {language === 'en' ? 'Report an Issue' : 'ችግር ሪፖርት ያድርጉ'}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                notifications.map((notification, index) => {
+                  const icon = getNotificationIcon(notification.type);
+                  return (
+                    <Animated.View
+                      key={notification.id}
+                      entering={FadeInUp.delay(index * 100)}
+                      className={`bg-white rounded-xl p-4 mb-3 shadow-sm ${!notification.read ? 'border-l-4 border-green-500' : ''}`}
                     >
-                      <Ionicons name={icon.name} size={20} color={icon.color} />
-                    </View>
-                    
-                    <View className="flex-1">
-                      <View className="flex-row justify-between items-start">
-                        <Text className="text-gray-800 font-semibold flex-1">
-                          {notification.title}
-                        </Text>
-                        <Text className="text-gray-400 text-xs">
-                          {formatTime(notification.time)}
-                        </Text>
-                      </View>
-                      
-                      <Text className="text-gray-600 mt-1 text-sm">
-                        {notification.message}
-                      </Text>
-                      
-                      {!notification.read && (
-                        <TouchableOpacity 
-                          onPress={() => markAsRead(notification.id)}
-                          className="self-start mt-2"
+                      <View className="flex-row items-start space-x-3">
+                        <View 
+                          className="w-10 h-10 rounded-full justify-center items-center mt-1"
+                          style={{ backgroundColor: `${icon.color}20` }}
                         >
-                          <Text className="text-green-600 text-xs font-medium">
-                            {language === 'en' ? 'Mark as read' : 'እንደተነበበ ምልክት ያድርጉ'}
+                          <Ionicons name={icon.name} size={20} color={icon.color} />
+                        </View>
+                        
+                        <View className="flex-1">
+                          <View className="flex-row justify-between items-start">
+                            <Text className="text-gray-800 font-semibold flex-1">
+                              {notification.title}
+                            </Text>
+                            <Text className="text-gray-400 text-xs">
+                              {formatTime(notification.time)}
+                            </Text>
+                          </View>
+                          
+                          <Text className="text-gray-600 mt-1 text-sm">
+                            {notification.message}
                           </Text>
-                        </TouchableOpacity>
-                      )}
-                    </View>
-                  </View>
-                </Animated.View>
-              );
+                          
+                          {!notification.read && (
+                            <TouchableOpacity 
+                              onPress={() => markAsRead(notification.id)}
+                              className="self-start mt-2"
+                            >
+                              <Text className="text-green-600 text-xs font-medium">
+                                {language === 'en' ? 'Mark as read' : 'እንደተነበበ ምልክት ያድርጉ'}
+                              </Text>
+                            </TouchableOpacity>
+                          )}
+                        </View>
+                      </View>
+                    </Animated.View>
+                  );
             })
           )}
         </View>
@@ -228,5 +291,3 @@ export default function NotificationScreen() {
     </View>
   )
 }
-
-const styles = StyleSheet.create({})
