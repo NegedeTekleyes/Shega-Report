@@ -307,13 +307,13 @@ export default function ReportDetailsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#15bdc6ff",
+    backgroundColor: "#9cb5b7ff",
   },
   centerContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#15bdc6ff",
+    backgroundColor: "#8eacaeff",
     padding: 20,
   },
   loadingText: {
