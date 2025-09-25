@@ -1,6 +1,6 @@
-import { Tabs } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { useLanguage } from '@/providers/language-providers';
+import { useLanguage } from "@/providers/language-providers";
+import { Ionicons } from "@expo/vector-icons";
+import { Tabs } from "expo-router";
 
 export default function TabLayout() {
   const { t } = useLanguage();
@@ -9,26 +9,25 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         headerStyle: {
-          backgroundColor: '#0a5398ff',
+          backgroundColor: "#0a5398ff",
         },
-        headerTintColor: '#fff',
+        headerTintColor: "#fff",
         headerTitleStyle: {
-          fontWeight: 'bold',
-          
+          fontWeight: "bold",
         },
         tabBarStyle: {
-          backgroundColor: '#ffffffff',
+          backgroundColor: "#ffffffff",
           borderTopWidth: 1,
-          borderTopColor: '#e5e7eb',
+          borderTopColor: "#e5e7eb",
         },
-        tabBarActiveTintColor: '#0a5398ff',
-        tabBarInactiveTintColor: 'rgba(183, 66, 181, 1)',
+        tabBarActiveTintColor: "#0a5398ff",
+        tabBarInactiveTintColor: "rgba(183, 66, 181, 1)",
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
-          title: t('dashboard'),
+          title: t("dashboard"),
           headerShown: false,
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="home-outline" size={size} color={color} />
@@ -38,8 +37,8 @@ export default function TabLayout() {
       <Tabs.Screen
         name="map"
         options={{
-          title: t('map'),
-          
+          title: t("map"),
+
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="map-outline" size={size} color={color} />
           ),
@@ -48,7 +47,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="reports"
         options={{
-          title: t('reports'),
+          title: t("reports"),
           headerShown: false,
 
           tabBarIcon: ({ color, size }) => (
@@ -59,7 +58,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="profile"
         options={{
-          title: t('profile'),
+          title: t("profile"),
           headerShown: false,
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="person-outline" size={size} color={color} />
@@ -69,7 +68,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="notification"
         options={{
-          title: t('notifications'),
+          title: t("notifications"),
           headerShown: false,
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="notifications-outline" size={size} color={color} />
@@ -79,7 +78,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="settings"
         options={{
-          title: t('settings'),
+          title: t("settings"),
           headerShown: false,
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="settings-outline" size={size} color={color} />
