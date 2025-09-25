@@ -1,16 +1,20 @@
-import React, { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import React, { createContext, ReactNode, useContext, useEffect, useState } from "react";
 import { Platform } from "react-native";
 
 // -------------------- TYPES --------------------
-export type UserRole = 'resident' | 'admin' | 'technician';
+export type UserRole = 'resident' | 'technician';
 
 export interface User {
   id: string;
   email: string;
   name: string;
   role: UserRole;
-  phone?: string;
   isVerified: boolean;
+  profilePhoto?: string
+  // add technicial-specific properties if needed
+  specialization?: string
+  phoneNumber?: string
 }
 
 interface AuthContextProps {
@@ -64,11 +68,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const logout = async () => {
-    setUser(null);
-    await storage.removeItem("user");
-    await storage.removeItem("token");
+    try {
+      await AsyncStorage.removeItem("authToken")
+      setUser(null);
+    } catch (error) {
+      console.error("Logout Failed", error)
+      throw error
+    }
+    // await storage.removeItem("user");
+    // await storage.removeItem("token");
   };
-
+ 
   return (
     <AuthContext.Provider
       value={{

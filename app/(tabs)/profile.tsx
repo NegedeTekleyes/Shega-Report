@@ -1,30 +1,170 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Alert, Switch, Image } from 'react-native';
-import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { View, Text, Image, TouchableOpacity, Alert, ScrollView, TextInput, Modal } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
+import { useState, useEffect } from "react";
+import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from '@/providers/auth-providers';
 import { useLanguage } from '@/providers/language-providers';
-import { LinearGradient } from 'expo-linear-gradient';
-import * as ImagePicker from 'expo-image-picker';
+import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 export default function ProfileScreen() {
-  const { user, logout, login } = useAuth(); // Added login here
-  const { t, language, changeLanguage } = useLanguage();
-  const router = useRouter();
+  const { user, logout, updateUserProfile } = useAuth();
+  const { t, language } = useLanguage();
   
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
-  const [locationServicesEnabled, setLocationServicesEnabled] = useState(true);
-  const [isEditing, setIsEditing] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
+  const [profileImage, setProfileImage] = useState(user?.photoURL || "");
+  const [userName, setUserName] = useState(user?.name || "");
+  const [userEmail, setUserEmail] = useState(user?.email || "");
+  const [userPhone, setUserPhone] = useState(user?.phone || "");
+  const [userLocation, setUserLocation] = useState(user?.location || "");
+  
+  // Edit modal state
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [editingField, setEditingField] = useState("");
+  const [editValue, setEditValue] = useState("");
+  
+  // Loading states
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  // Update local state when user data changes
+  useEffect(() => {
+    if (user) {
+      setUserName(user.name || "");
+      setUserEmail(user.email || "");
+      setUserPhone(user.phone || "");
+      setUserLocation(user.location || "");
+      setProfileImage(user.photoURL || "");
+    }
+  }, [user]);
+
+  const pickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert(t('permissionRequired'), t('cameraRollPermission'));
+      return;
+    }
+
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (!result.canceled) {
+      await updateProfileImage(result.assets[0].uri);
+    }
+  };
+const getRoleStyles = () => {
+  if (!user?.role) return { bg: 'bg-green-100', text: 'text-green-800' };
+  
+  switch(user.role) {
+    case 'technician':
+      return { bg: 'bg-blue-100', text: 'text-blue-800' };
+    default:
+      return { bg: 'bg-green-100', text: 'text-green-800' };
+  }
+};
+
+const roleStyles = getRoleStyles();
+  const takePhoto = async () => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert(t('permissionRequired'), t('cameraPermission'));
+      return;
+    }
+
+    let result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (!result.canceled) {
+      await updateProfileImage(result.assets[0].uri);
+    }
+  };
+
+  const updateProfileImage = async (imageUri: string) => {
+    try {
+      setIsUpdating(true);
+      // Here you would upload the image to your backend
+      // For now, we'll just update locally
+      setProfileImage(imageUri);
+      
+      // Update in auth context/backend
+      await updateUserProfile({ photoURL: imageUri });
+      
+      Alert.alert(t('success'), t('profileImageUpdated'));
+    } catch (error) {
+      Alert.alert(t('error'), t('updateFailed'));
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const showImagePickerOptions = () => {
+    Alert.alert(
+      t('selectProfilePhoto'),
+      t('chooseOption'),
+      [
+        {
+          text: t('chooseFromLibrary'),
+          onPress: pickImage,
+        },
+        {
+          text: t('takePhoto'),
+          onPress: takePhoto,
+        },
+        {
+          text: t('cancel'),
+          style: "cancel",
+        },
+      ]
+    );
+  };
+
+  const handleEditField = (field: string, value: string) => {
+    setEditingField(field);
+    setEditValue(value);
+    setEditModalVisible(true);
+  };
+
+  const saveEdit = async () => {
+    if (!editValue.trim()) {
+      Alert.alert(t('error'), t('fieldCannotBeEmpty'));
+      return;
+    }
+
+    try {
+      setIsUpdating(true);
+      const updates: any = { [editingField]: editValue };
+      
+      await updateUserProfile(updates);
+      
+      // Update local state
+      switch (editingField) {
+        case 'name': setUserName(editValue); break;
+        case 'phone': setUserPhone(editValue); break;
+        case 'location': setUserLocation(editValue); break;
+      }
+      
+      setEditModalVisible(false);
+      Alert.alert(t('success'), t('profileUpdated'));
+    } catch (error) {
+      Alert.alert(t('error'), t('updateFailed'));
+    } finally {
+      setIsUpdating(false);
+    }
+  };
 
   const handleLogout = () => {
     Alert.alert(
       t('logout'),
       t('confirmLogout'),
       [
-        { 
-          text: t('cancel'), 
-          style: 'cancel' 
+        {
+          text: t('cancel'),
+          style: "cancel"
         },
         { 
           text: t('logout'), 
@@ -37,376 +177,231 @@ export default function ProfileScreen() {
     );
   };
 
-  const pickProfilePhoto = async () => {
-    try {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert(
-          language === 'en' ? 'Permission required' : 'ፍቃድ ያስፈልጋል',
-          language === 'en' ? 'Please allow access to your photos' : 'እባክዎ ወደ ፎቶዎች መዳረሻ ይፍቀዱ'
-        );
-        return;
-      }
-
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 0.8,
-      });
-
-      if (!result.canceled && result.assets[0].uri) {
-        await updateProfilePhoto(result.assets[0].uri);
-      }
-    } catch (error) {
-      console.error('Error picking image:', error);
-      Alert.alert(
-        language === 'en' ? 'Error' : 'ስህተት',
-        language === 'en' ? 'Failed to upload photo' : 'ፎቶ ማስቀመጥ አልተቻለም'
-      );
-    }
+  const getFieldLabel = (field: string) => {
+    const labels: { [key: string]: string } = {
+      name: language === 'en' ? 'Full Name' : 'ሙሉ ስም',
+      phone: language === 'en' ? 'Phone Number' : 'ስልክ ቁጥር',
+      location: language === 'en' ? 'Location' : 'አድራሻ'
+    };
+    return labels[field] || field;
   };
-
-  const takeProfilePhoto = async () => {
-    try {
-      const { status } = await ImagePicker.requestCameraPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert(
-          language === 'en' ? 'Camera permission required' : 'የካሜራ ፍቃድ ያስፈልጋል'
-        );
-        return;
-      }
-
-      const result = await ImagePicker.launchCameraAsync({
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 0.8,
-      });
-
-      if (!result.canceled && result.assets[0].uri) {
-        await updateProfilePhoto(result.assets[0].uri);
-      }
-    } catch (error) {
-      console.error('Error taking photo:', error);
-      Alert.alert(
-        language === 'en' ? 'Error' : 'ስህተት',
-        language === 'en' ? 'Failed to take photo' : 'ፎቶ መውሰድ አልተቻለም'
-      );
-    }
-  };
-
-  const updateProfilePhoto = async (photoUri: string) => {
-    setIsUploading(true);
-    try {
-      // Simulate upload process
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Update user in auth context
-      const updatedUser = {
-        ...user!,
-        profilePhoto: photoUri
-      };
-      
-      // Update user using login function
-      login(updatedUser, 'mock-token');
-      
-      Alert.alert(
-        language === 'en' ? 'Success' : 'ተሳክቷል',
-        language === 'en' ? 'Profile photo updated!' : 'የመገለጫ ፎቶ ተዘምኗል!'
-      );
-    } catch (error) {
-      console.error('Error updating profile photo:', error);
-      Alert.alert(
-        language === 'en' ? 'Error' : 'ስህተት',
-        language === 'en' ? 'Failed to update profile photo' : 'የመገለጫ ፎቶ ማዘመን አልተቻለም'
-      );
-    } finally {
-      setIsUploading(false);
-    }
-  };
-
-  const removeProfilePhoto = () => {
-    Alert.alert(
-      language === 'en' ? 'Remove Photo' : 'ፎቶ አስወግድ',
-      language === 'en' ? 'Are you sure you want to remove your profile photo?' : 'የመገለጫ ፎቶዎን ለማስወገድ እርግጠኛ ነዎት?',
-      [
-        {
-          text: language === 'en' ? 'Cancel' : 'ሰርዝ',
-          style: 'cancel'
-        },
-        {
-          text: language === 'en' ? 'Remove' : 'አስወግድ',
-          style: 'destructive',
-          onPress: async () => {
-            const updatedUser = {
-              ...user!,
-              profilePhoto: undefined
-            };
-            login(updatedUser, 'mock-token');
-          }
-        }
-      ]
-    );
-  };
-
-  const showPhotoOptions = () => {
-    Alert.alert(
-      language === 'en' ? 'Profile Photo' : 'የመገለጫ ፎቶ',
-      language === 'en' ? 'Choose an option' : 'አንድ አማራጭ ይምረጡ',
-      [
-        {
-          text: language === 'en' ? 'Take Photo' : 'ፎቶ ይቅረቡ',
-          onPress: takeProfilePhoto
-        },
-        {
-          text: language === 'en' ? 'Choose from Gallery' : 'ከፎቶ አልበም ይምረጡ',
-          onPress: pickProfilePhoto
-        },
-        // ...(user?.profilePhoto ? [{
-        //   text: language === 'en' ? 'Remove Photo' : 'ፎቶ አስወግድ',
-        //   style: 'destructive',
-        //   onPress: removeProfilePhoto
-        // }] : []),
-        // {
-        //   text: language === 'en' ? 'Cancel' : 'ሰርዝ',
-        //   style: 'cancel'
-        // }
-      ]
-    );
-  };
-
-  const menuItems = [
-    {
-      icon: 'person',
-      label: language === 'en' ? 'Edit Profile' : 'መገለጫ አስተካክል',
-      onPress: () => setIsEditing(true),
-    },
-    {
-      icon: 'notifications',
-      label: language === 'en' ? 'Notifications' : 'ማስታወቂያዎች',
-      onPress: () => router.push('/(tabs)/notifications'),
-    },
-    {
-      icon: 'settings',
-      label: language === 'en' ? 'Settings' : 'ቅንብሮች',
-      onPress: () => router.push('/(tabs)/settings'),
-    },
-    {
-      icon: 'help-circle',
-      label: language === 'en' ? 'Help & Support' : 'እርዳታ እና ድጋፍ',
-      onPress: () => router.push('/(tabs)/support'),
-    },
-    {
-      icon: 'information',
-      label: language === 'en' ? 'About App' : 'ስለ መተግበሪያው',
-      onPress: () => router.push('/(tabs)/about'),
-    },
-  ];
-
-  const getRoleColor = (role: string) => {
-    switch (role) {
-      case 'admin': return { bg: 'bg-red-100', text: 'text-red-800' };
-      case 'technician': return { bg: 'bg-blue-100', text: 'text-blue-800' };
-      default: return { bg: 'bg-green-100', text: 'text-green-800' };
-    }
-  };
-
-  const roleColors = getRoleColor(user?.role || 'resident');
 
   return (
-    <ScrollView className="flex-1 bg-gray-50">
+    <ScrollView className="flex-1 bg-gray-400">
       {/* Header */}
-      <LinearGradient
-        colors={['#009639', '#00B341']}
-        className="px-6 pt-12 pb-8 rounded-b-3xl"
+      <Animated.View 
+        entering={FadeInDown.duration(500)} 
+        className="bg-[#0a5398ff] px-6 pt-12 pb-6"
       >
-        <View className="items-center">
-          {/* Profile Photo with Upload Option */}
-          <TouchableOpacity 
-            onPress={showPhotoOptions}
-            disabled={isUploading}
-            className="relative mb-4"
-          >
-            <View className="w-24 h-24 bg-white/20 rounded-full justify-center items-center border-4 border-white/30 overflow-hidden">
-              {user?.profilePhoto ? (
-                <Image 
-                  source={{ uri: user.profilePhoto }} 
-                  className="w-full h-full"
-                  resizeMode="cover"
-                />
-              ) : (
-                <Text className="text-white text-3xl font-bold">
-                  {user?.name?.charAt(0)?.toUpperCase()}
-                </Text>
-              )}
-              
-              {isUploading && (
-                <View className="absolute inset-0 bg-black/50 justify-center items-center">
-                  <Ionicons name="cloud-upload" size={32} color="white" />
-                </View>
-              )}
+        <Text className="text-xl font-bold text-white text-center">
+          {t('myProfile')}
+        </Text>
+      </Animated.View>
+
+      {/* User Info Section */}
+      <Animated.View 
+        entering={FadeInDown.delay(200)}
+        className="items-center bg-[#15bdc6ff] px-6 py-8 mx-6 mt-6 rounded-xl shadow-sm"
+      >
+        <View className="relative mb-4">
+          {profileImage ? (
+            <Image
+              source={{ uri: profileImage }}
+              className="w-32 h-32 rounded-full border-4 border-green-100"
+            />
+          ) : (
+            <View className="w-32 h-32 rounded-full border-4 border-green-100 bg-green-200 justify-center items-center">
+              <Text className="text-4xl font-bold text-green-600">
+                {userName?.charAt(0)?.toUpperCase() || 'U'}
+              </Text>
             </View>
+          )}
+          
+          <TouchableOpacity 
+            onPress={showImagePickerOptions}
+            disabled={isUpdating}
+            className="absolute bottom-0 right-0 bg-green-600 p-3 rounded-full border-4 border-white"
+          >
+            <Ionicons name="camera" size={20} color="white" />
+          </TouchableOpacity>
+        </View>
+        
+        <Text className="text-2xl font-bold text-gray-800 text-center">
+          {userName || t('noName')}
+        </Text>
+        <Text className="text-gray-500 mt-1 text-center">
+          {userEmail}
+        </Text>
+        
+        {/* User Role Badge */}
+        <View className={`px-4 py-1 rounded-full mt-3 ${roleStyles.bg}`}>
+  <Text className={`text-sm font-semibold ${roleStyles.text}`}>
+    {user?.role?.toUpperCase() || 'USER'}
+  </Text>
+</View>
+      </Animated.View>
+
+      {/* User Details Section */}
+      <Animated.View 
+        entering={FadeInDown.delay(400)}
+        className="bg-[#15bdc6ff] mx-6 mt-6 rounded-xl shadow-sm overflow-hidden"
+      >
+        <Text className="text-lg font-semibold text-gray-800 px-6 py-4 border-b border-gray-100">
+          {t('personalInformation')}
+        </Text>
+        
+        {/* Editable Fields */}
+        <TouchableOpacity
+          className="flex-row items-center justify-between px-6 py-4 border-b border-gray-100"
+          onPress={() => handleEditField('name', userName)}
+        >
+          <View className="flex-1">
+            <Text className="text-sm text-gray-600">{t('fullName')}</Text>
+            <Text className="text-gray-800 mt-1">{userName || t('notSet')}</Text>
+          </View>
+          <Ionicons name="create-outline" size={20} color="#6B7280" />
+        </TouchableOpacity>
+
+        <View className="flex-row items-center justify-between px-6 py-4 border-b border-gray-100">
+          <View className="flex-1">
+            <Text className="text-sm text-gray-500">{t('email')}</Text>
+            <Text className="text-gray-800 mt-1">{userEmail}</Text>
+          </View>
+          <Text className="text-xs text-gray-400 px-2 py-1 bg-gray-100 rounded">
+            {t('cannotEdit')}
+          </Text>
+        </View>
+
+        <TouchableOpacity
+          className="flex-row items-center justify-between px-6 py-4 border-b border-gray-100"
+          onPress={() => handleEditField('phone', userPhone)}
+        >
+          <View className="flex-1">
+            <Text className="text-sm text-gray-500">{t('phoneNumber')}</Text>
+            <Text className="text-gray-800 mt-1">{userPhone || t('notSet')}</Text>
+          </View>
+          <Ionicons name="create-outline" size={20} color="#6B7280" />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          className="flex-row items-center justify-between px-6 py-4"
+          onPress={() => handleEditField('location', userLocation)}
+        >
+          <View className="flex-1">
+            <Text className="text-sm text-gray-500">{t('location')}</Text>
+            <Text className="text-gray-800 mt-1">{userLocation || t('notSet')}</Text>
+          </View>
+          <Ionicons name="create-outline" size={20} color="#6B7280" />
+        </TouchableOpacity>
+      </Animated.View>
+
+      {/* Quick Actions */}
+      <Animated.View 
+        entering={FadeInDown.delay(600)}
+        className="bg-[#15bdc6ff] mx-6 mt-6 rounded-xl shadow-sm overflow-hidden"
+      >
+        <TouchableOpacity
+          className="flex-row items-center px-6 py-4 border-b border-gray-100"
+          onPress={() => router.push("/(tabs)/settings")}
+        >
+          <View className="bg-blue-100 p-3 rounded-lg mr-4">
+            <Ionicons name="settings-outline" size={22} color="#3B82F6" />
+          </View>
+          <Text className="text-lg flex-1 text-gray-700">{t('settings')}</Text>
+          <Ionicons name="chevron-forward" size={20} color="#D1D5DB" />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          className="flex-row items-center px-6 py-4 border-b border-gray-100"
+          onPress={() => router.push("/(tabs)/notification")}
+        >
+          <View className="bg-orange-100 p-3 rounded-lg mr-4">
+            <Ionicons name="notifications-outline" size={22} color="#F97316" />
+          </View>
+          <Text className="text-lg flex-1 text-gray-700">{t('notifications')}</Text>
+          <Ionicons name="chevron-forward" size={20} color="#D1D5DB" />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          className="flex-row items-center px-6 py-4 border-b border-gray-100"
+          onPress={() => router.push("/(modals)/support")}
+        >
+          <View className="bg-purple-100 p-3 rounded-lg mr-4">
+            <Ionicons name="help-circle-outline" size={22} color="#8B5CF6" />
+          </View>
+          <Text className="text-lg flex-1 text-gray-700">{t('support')}</Text>
+          <Ionicons name="chevron-forward" size={20} color="#D1D5DB" />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          className="flex-row items-center px-6 py-4"
+          onPress={() => router.push("/(modals)/about")}
+        >
+          <View className="bg-green-100 p-3 rounded-lg mr-4">
+            <Ionicons name="information-circle-outline" size={22} color="#10B981" />
+          </View>
+          <Text className="text-lg flex-1 text-gray-700">{t('about')}</Text>
+          <Ionicons name="chevron-forward" size={20} color="#D1D5DB" />
+        </TouchableOpacity>
+      </Animated.View>
+
+      {/* Logout Button */}
+      <Animated.View 
+        entering={FadeInDown.delay(800)}
+        className="mx-6 mt-6 mb-10"
+      >
+        <TouchableOpacity
+          className="bg-[#0a5398ff] py-4 rounded-xl shadow-sm border border-red-200"
+          onPress={handleLogout}
+        >
+          <Text className="text-red-600 text-center font-semibold text-lg">
+            {t('logout')}
+          </Text>
+        </TouchableOpacity>
+      </Animated.View>
+
+      {/* Edit Modal */}
+      <Modal
+        visible={editModalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setEditModalVisible(false)}
+      >
+        <View className="flex-1 bg-black/50 justify-center items-center p-6">
+          <View className="bg-white rounded-2xl p-6 w-full max-w-sm">
+            <Text className="text-xl font-bold text-gray-800 mb-2">
+              {t('edit')} {getFieldLabel(editingField)}
+            </Text>
             
-            {/* Edit Pencil Icon */}
-            <View className="absolute bottom-0 right-0 bg-green-600 rounded-full p-2 border-2 border-white">
-              <Ionicons 
-                name={isUploading ? "cloud-upload" : "camera"} 
-                size={16} 
-                color="white" 
-              />
-            </View>
-          </TouchableOpacity>
-          
-          <Text className="text-white text-2xl font-bold mb-1">
-            {user?.name}
-          </Text>
-          
-          <Text className="text-green-100 text-sm mb-3">
-            {user?.email}
-          </Text>
-          
-          <View className={`px-4 py-2 rounded-full ${roleColors.bg} mb-4`}>
-            <Text className={`text-sm font-semibold ${roleColors.text}`}>
-              {user?.role?.toUpperCase()}
-            </Text>
-          </View>
-        </View>
-      </LinearGradient>
-
-      <View className="px-6 py-6">
-        {/* Settings Section */}
-        <Text className="text-2xl font-bold text-gray-800 mb-4">
-          ⚙️ {language === 'en' ? 'Settings' : 'ቅንብሮች'}
-        </Text>
-        
-        <View className="bg-white rounded-2xl shadow-sm border border-gray-100 mb-8">
-          {/* Language Setting */}
-          <TouchableOpacity 
-            className="flex-row items-center justify-between p-4 border-b border-gray-100"
-            onPress={() => changeLanguage(language === 'en' ? 'am' : 'en')}
-          >
-            <View className="flex-row items-center">
-              <View className="w-10 h-10 bg-blue-100 rounded-full justify-center items-center mr-3">
-                <Ionicons name="language" size={20} color="#3B82F6" />
-              </View>
-              <View>
-                <Text className="text-gray-800 font-medium">
-                  {language === 'en' ? 'Language' : 'ቋንቋ'}
-                </Text>
-                <Text className="text-gray-500 text-sm">
-                  {language === 'en' ? 'English' : 'አማርኛ'}
-                </Text>
-              </View>
-            </View>
-            <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
-          </TouchableOpacity>
-
-          {/* Notifications */}
-          <View className="flex-row items-center justify-between p-4 border-b border-gray-100">
-            <View className="flex-row items-center">
-              <View className="w-10 h-10 bg-green-100 rounded-full justify-center items-center mr-3">
-                <Ionicons name="notifications" size={20} color="#10B981" />
-              </View>
-              <View>
-                <Text className="text-gray-800 font-medium">
-                  {language === 'en' ? 'Notifications' : 'ማስታወቂያዎች'}
-                </Text>
-                <Text className="text-gray-500 text-sm">
-                  {language === 'en' ? 'Receive alerts' : 'ማስታወቂያዎችን ይቀበሉ'}
-                </Text>
-              </View>
-            </View>
-            <Switch
-              value={notificationsEnabled}
-              onValueChange={setNotificationsEnabled}
-              trackColor={{ false: '#D1D5DB', true: '#10B981' }}
+            <TextInput
+              value={editValue}
+              onChangeText={setEditValue}
+              className="border border-gray-300 rounded-xl px-4 py-3 mt-4 text-gray-800"
+              placeholder={t('enterValue')}
+              autoFocus
             />
-          </View>
-
-          {/* Location Services */}
-          <View className="flex-row items-center justify-between p-4">
-            <View className="flex-row items-center">
-              <View className="w-10 h-10 bg-purple-100 rounded-full justify-center items-center mr-3">
-                <Ionicons name="location" size={20} color="#8B5CF6" />
-              </View>
-              <View>
-                <Text className="text-gray-800 font-medium">
-                  {language === 'en' ? 'Location Services' : 'የአካባቢ አገልግሎቶች'}
+            
+            <View className="flex-row justify-end space-x-3 mt-6">
+              <TouchableOpacity
+                onPress={() => setEditModalVisible(false)}
+                className="px-4 py-2 rounded-lg"
+              >
+                <Text className="text-gray-600 font-medium">{t('cancel')}</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                onPress={saveEdit}
+                disabled={isUpdating}
+                className="bg-green-600 px-4 py-2 rounded-lg"
+              >
+                <Text className="text-white font-medium">
+                  {isUpdating ? t('saving') : t('save')}
                 </Text>
-                <Text className="text-gray-500 text-sm">
-                  {language === 'en' ? 'For accurate reporting' : 'ለትክክለኛ ሪፖርት'}
-                </Text>
-              </View>
+              </TouchableOpacity>
             </View>
-            <Switch
-              value={locationServicesEnabled}
-              onValueChange={setLocationServicesEnabled}
-              trackColor={{ false: '#D1D5DB', true: '#8B5CF6' }}
-            />
           </View>
         </View>
-
-        {/* Quick Actions */}
-        <Text className="text-2xl font-bold text-gray-800 mb-4">
-          🚀 {language === 'en' ? 'Quick Actions' : 'ፈጣን እርምጃዎች'}
-        </Text>
-        
-        <View className="bg-white rounded-2xl shadow-sm border border-gray-100 mb-8">
-          {menuItems.map((item, index) => (
-            <TouchableOpacity
-              key={item.label}
-              className={`flex-row items-center justify-between p-4 ${
-                index < menuItems.length - 1 ? 'border-b border-gray-100' : ''
-              }`}
-              onPress={item.onPress}
-            >
-              <View className="flex-row items-center">
-                <View className="w-10 h-10 bg-gray-100 rounded-full justify-center items-center mr-3">
-                  <Ionicons name={item.icon} size={20} color="#4B5563" />
-                </View>
-                <Text className="text-gray-800 font-medium">{item.label}</Text>
-              </View>
-              <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        {/* Account Actions */}
-        <Text className="text-2xl font-bold text-gray-800 mb-4">
-          🔐 {language === 'en' ? 'Account' : 'መለያ'}
-        </Text>
-        
-        <View className="bg-white rounded-2xl shadow-sm border border-gray-100 mb-8">
-          <TouchableOpacity className="flex-row items-center p-4 border-b border-gray-100">
-            <View className="w-10 h-10 bg-yellow-100 rounded-full justify-center items-center mr-3">
-              <Ionicons name="shield-checkmark" size={20} color="#F59E0B" />
-            </View>
-            <Text className="text-gray-800 font-medium flex-1">
-              {language === 'en' ? 'Privacy & Security' : 'ግላዊነት እና ደህንነት'}
-            </Text>
-            <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
-          </TouchableOpacity>
-
-          <TouchableOpacity onPress={handleLogout} className="flex-row items-center p-4">
-            <View className="w-10 h-10 bg-red-100 rounded-full justify-center items-center mr-3">
-              <Ionicons name="log-out" size={20} color="#EF4444" />
-            </View>
-            <Text className="text-red-600 font-medium flex-1">
-              {t('logout')}
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* App Version */}
-        <View className="items-center mt-8">
-          <Text className="text-gray-500 text-sm">
-            ShegaReport v1.0.0
-          </Text>
-          <Text className="text-gray-400 text-xs mt-1">
-            {language === 'en' ? 'Serving Debre Birhan Community' : 'ለደብረ ብርሃን �ማህበረሰብ አገልግሎት'}
-          </Text>
-        </View>
-      </View>
+      </Modal>
     </ScrollView>
   );
 }

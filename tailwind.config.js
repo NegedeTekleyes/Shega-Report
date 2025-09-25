@@ -1,14 +1,13 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  // IMPORTANT: Add the NativeWind preset
-  presets: [require("nativewind/preset")],
-  
   content: [
     "./App.{js,jsx,ts,tsx}",
     "./app/**/*.{js,jsx,ts,tsx}",
     "./components/**/*.{js,jsx,ts,tsx}",
-    "./src/**/*.{js,jsx,ts,tsx}"
+    "./src/**/*.{js,jsx,ts,tsx}",
+    "./screens/**/*.{js,jsx,ts,tsx}",
   ],
+    presets: [require("nativewind/preset")],
   theme: {
     extend: {
       colors: {
@@ -28,4 +27,12 @@ module.exports = {
     },
   },
   plugins: [],
+  // Add these for better NativeWind compatibility
+  corePlugins: {
+    transform: true,
+    translate: true,
+    rotate: true,
+    skew: true,
+    scale: true,
+  },
 }
