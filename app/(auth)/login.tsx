@@ -67,7 +67,7 @@ export default function Login() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          email: email.trim().toLowerCase,
+          email: email.trim().toLowerCase(),
 
           password: password,
         }),
@@ -81,7 +81,7 @@ export default function Login() {
         Alert.alert(t("loginSuccess"), `${t("welcome")} ${data.user.name}!`);
         router.replace("/(tabs)");
       } else {
-        setError(data.error || t("loginError"));
+        setError(data.message || data.error || t("loginError"));
       }
     } catch (error: any) {
       console.error("Login error:", error.message);
@@ -106,7 +106,7 @@ export default function Login() {
     setIsSendingReset(true);
 
     try {
-      const res = await fetch("http://192.168.1.4:3000/auth/forgot-password", {
+      const res = await fetch("http://localhost:3000/auth/forgot-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: trimmedEmail }),
@@ -273,6 +273,43 @@ export default function Login() {
               </Text>
             </Text>
           </Pressable>
+          {/* Redirect to Signup */}
+          <Pressable
+            onPress={() => !isLoading && router.push("/(auth)/signup")}
+            disabled={isLoading}
+            className="items-center"
+          >
+            <Text
+              className={`${isLoading ? "text-gray-400" : "text-gray-600"}`}
+            >
+              {t("dontHaveAccount")}{" "}
+              <Text
+                className={
+                  isLoading ? "text-green-400" : "text-green-600 font-semibold"
+                }
+              >
+                {t("register")}
+              </Text>
+            </Text>
+          </Pressable>
+
+          {/* 🔧 DEVELOPMENT ONLY: Test Reset Password Screen */}
+          {__DEV__ && (
+            <Pressable
+              onPress={() => {
+                // Use the token from your backend console log
+                const testToken =
+                  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjIsImVtYWlsIjoiYWJ1dHVAZ21haWwuY29tIiwidHlwZSI6InBhc3N3b3JkX3Jlc2V0IiwiaWF0IjoxNzU5MTM1MzEyLCJleHAiOjE3NTkxMzg5MTJ9.yHE2PpX-pHXQ213ngIu0NLs3p3g-qWA74DZzpzQXO1g";
+                router.push(`/(auth)/reset-password?token=${testToken}`);
+              }}
+              disabled={isLoading}
+              className="items-center mt-4 p-2 border border-green-600 rounded-lg"
+            >
+              <Text className="text-green-600 font-semibold text-sm">
+                🧪 DEV: Test Reset Screen
+              </Text>
+            </Pressable>
+          )}
         </Animated.View>
       </View>
 
