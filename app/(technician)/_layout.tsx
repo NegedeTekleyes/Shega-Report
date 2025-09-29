@@ -1,10 +1,10 @@
 import LoadingScreen from "@/components/loadingScreen";
 import { useAuth } from "@/providers/auth-providers";
 import { useLanguage } from "@/providers/language-providers";
-import { Stack } from "expo-router";
+import { Redirect, Stack } from "expo-router";
 
 export default function TechnicianLayout() {
-  // ✅ Fixed spelling: "Technician"
+  // Fixed spelling: "Technician"
   const { user, isLoading } = useAuth();
   const { t } = useLanguage();
 
@@ -12,9 +12,9 @@ export default function TechnicianLayout() {
     return <LoadingScreen />;
   }
 
-  //   if (!user || user.role !== "technician") {
-  //     return <Redirect href="/(auth)/welcome" />;
-  //   }
+  if (!user || user.role !== "technician") {
+    return <Redirect href="/(auth)/welcome" />;
+  }
 
   return (
     <Stack
