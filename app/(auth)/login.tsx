@@ -293,7 +293,7 @@ export default function Login() {
             </Text>
           </Pressable>
 
-          {/* 🔧 DEVELOPMENT ONLY: Test Reset Password Screen */}
+          {/* DEVELOPMENT ONLY: Test Reset Password Screen */}
           {__DEV__ && (
             <Pressable
               onPress={() => {
@@ -306,7 +306,7 @@ export default function Login() {
               className="items-center mt-4 p-2 border border-green-600 rounded-lg"
             >
               <Text className="text-green-600 font-semibold text-sm">
-                🧪 DEV: Test Reset Screen
+                DEV: Test Reset Screen
               </Text>
             </Pressable>
           )}
