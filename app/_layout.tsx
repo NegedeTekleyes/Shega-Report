@@ -1,25 +1,31 @@
 import { AuthProvider, useAuth } from "@/providers/auth-providers";
 import { LanguageProvider } from "@/providers/language-providers";
 import { Stack, useRouter } from "expo-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
 
 // Component to handle routing based on user role
 function RootLayoutContent() {
   const { user, isLoading } = useAuth();
   const router = useRouter();
-
+  const [redirected, setRedirected] = useState(false);
   useEffect(() => {
-    if (!isLoading) {
+    if (!isLoading && !redirected) {
+      console.log("Auth state:", { user, isLoading, redirected });
       if (!user) {
+        //  No user redirect to welco e auth
         router.replace("/(auth)/welcome");
+        setRedirected(true);
       } else if (user.role === "technician") {
-        router.replace("/(technician)");
+        router.replace("/(technician)/dashboard");
+        setRedirected(true);
       } else {
+        // regular users -redirect to tabs
         router.replace("/(tabs)");
+        setRedirected(true);
       }
     }
-  }, [user, isLoading, router]);
+  }, [user, isLoading, redirected, router]);
 
   if (isLoading) {
     return (
