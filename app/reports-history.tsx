@@ -33,7 +33,7 @@ export default function ReportsHistoryScreen() {
   const { language } = useLanguage();
   const router = useRouter();
   const { user } = useAuth();
-  const [compliants, setComplaints] = useState<Complaint[]>([]);
+  const [complaints, setComplaints] = useState<Complaint[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const { refresh } = useLocalSearchParams();
@@ -71,6 +71,7 @@ export default function ReportsHistoryScreen() {
         language === "en" ? "Error" : "ስህተት",
         language === "en" ? "Network error occurred" : "የኔትወርክ ስህተት ተፈጥሯል"
       );
+      setComplaints([])
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -90,65 +91,67 @@ export default function ReportsHistoryScreen() {
   };
 
   const getStatusColor = (status: string) => {
-    switch (status?.toLowerCase()) {
-      case "resolved":
+    switch (status?.toUpperCase()) {
+      case "RESOLVED":
         return "#10B981";
-      case "in_progress":
+      case "IN_PROGRESS":
         return "#F59E0B";
-      case "assigned":
+      case "ASSIGNED":
         return "#3B82F6";
-      case "rejected":
+      case "REJECTED":
         return "#EF4444";
+      case "SUBMITTED":
+        return "#6B7280";
       default:
-        return "#6B7280"; // pending
+        return "#6B7280";
     }
   };
 
   const getStatusText = (status: string) => {
-    const statusLower = status?.toLowerCase();
+    const statusUpper = status?.toUpperCase();
     if (language === "en") {
-      switch (statusLower) {
-        case "pending":
-          return "Pending Review";
-        case "assigned":
+      switch (statusUpper) {
+        case "SUBMITTED":
+          return "Submitted";
+        case "ASSIGNED":
           return "Assigned";
-        case "in_progress":
+        case "IN_PROGRESS":
           return "In Progress";
-        case "resolved":
+        case "RESOLVED":
           return "Resolved";
-        case "rejected":
+        case "REJECTED":
           return "Rejected";
         default:
-          return status;
+          return status || "Unknown";
       }
     } else {
-      switch (statusLower) {
-        case "pending":
-          return "በግምት ላይ";
-        case "assigned":
+      switch (statusUpper) {
+         case "SUBMITTED":
+          return "ቀርቧል";
+        case "ASSIGNED":
           return "ተመድቧል";
-        case "in_progress":
+        case "IN_PROGRESS":
           return "በሂደት ላይ";
-        case "resolved":
+        case "RESOLVED":
           return "ተፈትቷል";
-        case "rejected":
+        case "REJECTED":
           return "ተቀባይነት አላገኘም";
         default:
-          return status;
+          return status || "አልታወቀም";
       }
     }
   };
 
   const getCategoryLabel = (category: string) => {
     const categories = {
-      water_leak: language === "en" ? "Water Leak" : "የውሃ ፍሳሽ",
-      no_water: language === "en" ? "No Water" : "ውሃ አለመገኘት",
-      dirty_water: language === "en" ? "Dirty Water" : "እርጥበት ውሃ",
-      sanitation: language === "en" ? "Sanitation" : "ንፅህና",
-      pipe_burst: language === "en" ? "Burst Pipe" : "የተቀጠቀጠ ቧንቧ",
-      drainage: language === "en" ? "Drainage" : "መፍሰሻ",
+      WATER_LEAK: language === "en" ? "Water Leak" : "የውሃ ፍሳሽ",
+      NO_WATER: language === "en" ? "No Water" : "ውሃ አለመገኘት",
+      DIRTY_WATER: language === "en" ? "Dirty Water" : "እርጥበት ውሃ",
+      SANITATION: language === "en" ? "Sanitation" : "ንፅህና",
+      PIPE_BRUST: language === "en" ? "Burst Pipe" : "የተቀጠቀጠ ቧንቧ",
+      DRANIAGE: language === "en" ? "Drainage" : "መፍሰሻ",
     };
-    return categories[category as keyof typeof categories] || category;
+    return categories[category as keyof typeof categories] || category || "Unknown Category";
   };
 
   const formatDate = (dateString: string) => {
@@ -162,6 +165,24 @@ export default function ReportsHistoryScreen() {
     });
   };
 
+  // safe navigtaion handler
+  const handleComplaintPress = (complaint: Complaint)=>{
+     if (!complaint?.id) {
+      Alert.alert(
+        language === "en" ? "Error" : "ስህተት",
+        language === "en" ? "Invalid complaint data" : "ልክ ያልሆነ የቅሬታ ውሂብ"
+      );
+      return;
+    }
+
+    router.push({
+      pathname: "/report-details",
+      params: { 
+        complaintId: complaint.id.toString(),
+        complaintData: JSON.stringify(complaint) // Pass full data as backup
+      },
+    });
+  }
   if (loading) {
     return (
       <View style={styles.centerContainer}>
@@ -178,7 +199,7 @@ export default function ReportsHistoryScreen() {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
-          onPress={() => router.replace("/reports")}
+          onPress={() => router.back()}
           style={styles.backButton}
         >
           <Ionicons name="arrow-back" size={24} color="white" />
@@ -201,7 +222,7 @@ export default function ReportsHistoryScreen() {
           />
         }
       >
-        {compliants.length === 0 ? (
+        {!complaints || complaints.length === 0 ? (
           <View style={styles.emptyContainer}>
             <Ionicons name="document-text-outline" size={64} color="#9CA3AF" />
             <Text style={styles.emptyText}>
@@ -227,54 +248,51 @@ export default function ReportsHistoryScreen() {
           <View style={styles.listContainer}>
             <Text style={styles.sectionTitle}>
               {language === "en" ? "Submitted Reports" : "የቀረቡ ሪፖርቶች"} (
-              {compliants.length})
+              {complaints.length})
             </Text>
 
-            {compliants.map((compliant) => (
+            {complaints.map((complaint, index) => (
               <TouchableOpacity
-                key={compliant.id}
+                key={complaint?.id || `complaint-${index}`}
                 style={styles.complaintCard}
                 onPress={() =>
-                  router.push({
-                    pathname: "/report-details",
-                    params: { complaintId: compliant.id },
-                  })
+                 handleComplaintPress(complaint)
                 }
               >
                 <View style={styles.cardHeader}>
                   <View style={styles.titleContainer}>
                     <Text style={styles.complaintTitle} numberOfLines={1}>
-                      {compliant.title}
+                      {complaint.title}
                     </Text>
                     <View
                       style={[
                         styles.statusBadge,
-                        { backgroundColor: getStatusColor(compliant.status) },
+                        { backgroundColor: getStatusColor(complaint.status) },
                       ]}
                     >
                       <Text style={styles.statusText}>
-                        {getStatusText(compliant.status)}
+                        {getStatusText(complaint.status)}
                       </Text>
                     </View>
                   </View>
 
                   <Text style={styles.dateText}>
-                    {formatDate(compliant.createdAt)}
+                    {formatDate(complaint.createdAt)}
                   </Text>
                 </View>
 
                 <View style={styles.categoryContainer}>
                   <Text style={styles.categoryText}>
-                    {getCategoryLabel(compliant.category)}
+                    {getCategoryLabel(complaint.category)}
                   </Text>
                   <View
                     style={[
                       styles.urgencyBadge,
                       {
                         backgroundColor:
-                          compliant.urgency === "high"
+                          complaint.urgency === "high"
                             ? "#FEF2F2"
-                            : compliant.urgency === "emergency"
+                            : complaint.urgency === "emergency"
                             ? "#FEF2F2"
                             : "#FFFBEB",
                       },
@@ -285,28 +303,28 @@ export default function ReportsHistoryScreen() {
                         styles.urgencyText,
                         {
                           color:
-                            compliant.urgency === "high"
+                            complaint.urgency === "high"
                               ? "#DC2626"
-                              : compliant.urgency === "emergency"
+                              : complaint.urgency === "emergency"
                               ? "#DC2626"
                               : "#D97706",
                         },
                       ]}
                     >
-                      {compliant.urgency}
+                      {complaint.urgency}
                     </Text>
                   </View>
                 </View>
 
                 <Text style={styles.descriptionText} numberOfLines={2}>
-                  {compliant.description}
+                  {complaint.description}
                 </Text>
 
-                {compliant.photos && compliant.photos.length > 0 && (
+                {complaint.photos && complaint.photos.length > 0 && (
                   <View style={styles.photosContainer}>
                     <Ionicons name="images" size={16} color="#6B7280" />
                     <Text style={styles.photosText}>
-                      {compliant.photos.length}{" "}
+                      {complaint.photos.length}{" "}
                       {language === "en" ? "photos" : "ፎቶዎች"}
                     </Text>
                   </View>
@@ -315,7 +333,7 @@ export default function ReportsHistoryScreen() {
                 <View style={styles.cardFooter}>
                   <Ionicons name="location" size={16} color="#6B7280" />
                   <Text style={styles.locationText} numberOfLines={1}>
-                    {compliant.location?.address || "Location not specified"}
+                    {complaint.location?.address || "Location not specified"}
                   </Text>
                 </View>
               </TouchableOpacity>
