@@ -82,12 +82,12 @@ export default function ReportScreen() {
 
   // Categories based on water and sanitation issues
   const categories = [
-    { id: "water_leak", label: t("waterLeak") },
-    { id: "no_water", label: t("noWaterSupply") },
-    { id: "dirty_water", label: t("dirtyWater") },
-    { id: "sanitation", label: t("sanitationIssue") },
-    { id: "pipe_burst", label: t("burstPipe") },
-    { id: "drainage", label: t("drainageProblem") },
+    { id: "WATER_LAKE", label: t("waterLeak") },
+    { id: "NO_WATER", label: t("noWaterSupply") },
+    { id: "DIRTY_WATER", label: t("dirtyWater") },
+    { id: "SANITATION", label: t("sanitationIssue") },
+    { id: "PIPE_BRUST", label: t("burstPipe") },
+    { id: "DRAINAGE", label: t("drainageProblem") },
   ];
 
   const urgencyLevels = [
