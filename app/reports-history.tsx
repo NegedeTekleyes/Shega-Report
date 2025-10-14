@@ -37,47 +37,49 @@ export default function ReportsHistoryScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const { refresh } = useLocalSearchParams();
+
   const fetchComplaints = async () => {
     try {
       const token = await AsyncStorage.getItem("token");
-      if (!token) {
-        Alert.alert(
-          language === "en" ? "Error" : "ስህተት",
-          language === "en" ? "Please login again" : "እባክዎ ደግመው ይግቡ"
-        );
-        router.push("/login");
-        return;
-      }
 
-      const API_BASE = "http://localhost:3000";
-      const response = await fetch(`${API_BASE}/complaints`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await fetch(
+        "http://192.168.1.2:3000/complaints/my-complaints?page=1&limit=50",
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      console.log("Response status:", response.status);
 
       if (response.ok) {
         const data = await response.json();
-        setComplaints(data);
+        console.log("Full API response:", data);
+
+        // Extract the complaints array from the response
+        if (data.complaints && Array.isArray(data.complaints)) {
+          console.log(`Found ${data.complaints.length} complaints`);
+          setComplaints(data.complaints);
+        } else {
+          console.error("Complaints array not found in response:", data);
+          setComplaints([]);
+        }
       } else {
-        Alert.alert(
-          language === "en" ? "Error" : "ስህተት",
-          language === "en" ? "Failed to load reports" : "ሪፖርቶችን ማምጣት አልተቻለም"
-        );
+        const errorText = await response.text();
+        console.error("Server error:", errorText);
+        setComplaints([]);
       }
     } catch (error) {
       console.error("Error fetching complaints:", error);
-      Alert.alert(
-        language === "en" ? "Error" : "ስህተት",
-        language === "en" ? "Network error occurred" : "የኔትወርክ ስህተት ተፈጥሯል"
-      );
-      setComplaints([])
+      setComplaints([]);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
   };
-
   useEffect(() => {
     fetchComplaints();
   }, [refresh]);
@@ -126,7 +128,7 @@ export default function ReportsHistoryScreen() {
       }
     } else {
       switch (statusUpper) {
-         case "SUBMITTED":
+        case "SUBMITTED":
           return "ቀርቧል";
         case "ASSIGNED":
           return "ተመድቧል";
@@ -151,7 +153,11 @@ export default function ReportsHistoryScreen() {
       PIPE_BRUST: language === "en" ? "Burst Pipe" : "የተቀጠቀጠ ቧንቧ",
       DRANIAGE: language === "en" ? "Drainage" : "መፍሰሻ",
     };
-    return categories[category as keyof typeof categories] || category || "Unknown Category";
+    return (
+      categories[category as keyof typeof categories] ||
+      category ||
+      "Unknown Category"
+    );
   };
 
   const formatDate = (dateString: string) => {
@@ -166,8 +172,8 @@ export default function ReportsHistoryScreen() {
   };
 
   // safe navigtaion handler
-  const handleComplaintPress = (complaint: Complaint)=>{
-     if (!complaint?.id) {
+  const handleComplaintPress = (complaint: Complaint) => {
+    if (!complaint?.id) {
       Alert.alert(
         language === "en" ? "Error" : "ስህተት",
         language === "en" ? "Invalid complaint data" : "ልክ ያልሆነ የቅሬታ ውሂብ"
@@ -177,12 +183,12 @@ export default function ReportsHistoryScreen() {
 
     router.push({
       pathname: "/report-details",
-      params: { 
+      params: {
         complaintId: complaint.id.toString(),
-        complaintData: JSON.stringify(complaint) // Pass full data as backup
+        complaintData: JSON.stringify(complaint), // Pass full data as backup
       },
     });
-  }
+  };
   if (loading) {
     return (
       <View style={styles.centerContainer}>
@@ -255,9 +261,7 @@ export default function ReportsHistoryScreen() {
               <TouchableOpacity
                 key={complaint?.id || `complaint-${index}`}
                 style={styles.complaintCard}
-                onPress={() =>
-                 handleComplaintPress(complaint)
-                }
+                onPress={() => handleComplaintPress(complaint)}
               >
                 <View style={styles.cardHeader}>
                   <View style={styles.titleContainer}>
