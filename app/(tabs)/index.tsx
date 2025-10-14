@@ -58,21 +58,17 @@ export default function HomeScreen() {
       console.log("=== FETCH USER REPORTS DEBUG ===");
       const token = await AsyncStorage.getItem("token");
       console.log("Token exists:", !!token);
-      if (token) {
-        console.log("Token Length:", token.length);
-        console.log("Token Preview:", token.substring(0, 20) + "...");
-      }
-      // check user object
-      console.log("User object", user);
-      console.log("User ID:", user?.id);
+
       if (!token) {
         console.log("No token found");
+        setFallbackData();
         return;
       }
 
       const API_BASE = "http://192.168.1.2:3000";
       const url = `${API_BASE}/complaints/my-complaints`;
       console.log("Fetching from URL:", url);
+
       const reportsResponse = await fetch(url, {
         method: "GET",
         headers: {
@@ -82,7 +78,7 @@ export default function HomeScreen() {
       });
 
       console.log("Response status:", reportsResponse.status);
-      console.log("Response status text:", reportsResponse.statusText);
+
       if (reportsResponse.ok) {
         const userReports = await reportsResponse.json();
 
@@ -121,7 +117,6 @@ export default function HomeScreen() {
         setRecentActivities(formattedActivities);
       } else {
         console.error("Failed to fetch user reports");
-        // Fallback to mock data if API fails
         setFallbackData();
       }
     } catch (error) {
@@ -145,7 +140,7 @@ export default function HomeScreen() {
   };
 
   // Helper function to get category label
-  const getCategoryLabel = (category: string, lang: string) => {
+  const getCategoryLabel = (category: string, lang: string): string => {
     const categories: { [key: string]: { en: string; am: string } } = {
       water_leak: { en: "Water Leak Report", am: "የውሃ ፍሳሽ ሪፖርት" },
       no_water: { en: "No Water Supply", am: "ውሃ አለመገኘት" },
@@ -159,7 +154,7 @@ export default function HomeScreen() {
   };
 
   // Helper function to format time ago
-  const formatTimeAgo = (dateString: string, lang: string) => {
+  const formatTimeAgo = (dateString: string, lang: string): string => {
     const date = new Date(dateString);
     const now = new Date();
     const diffInHours = Math.floor(
@@ -184,25 +179,25 @@ export default function HomeScreen() {
     switch (status) {
       case "resolved":
         return {
-          icon: "checkmark-done",
+          icon: "checkmark-done" as const,
           color: "#10B981",
           text: language === "en" ? "Resolved" : "ተጠናቋል",
         };
       case "in-progress":
         return {
-          icon: "time",
+          icon: "time" as const,
           color: "#F59E0B",
           text: language === "en" ? "In Progress" : "በሂደት ላይ",
         };
       case "rejected":
         return {
-          icon: "close",
+          icon: "close" as const,
           color: "#EF4444",
           text: language === "en" ? "Rejected" : "ተቀባይነት አላገኘም",
         };
       default:
         return {
-          icon: "time-outline",
+          icon: "time-outline" as const,
           color: "#6B7280",
           text: language === "en" ? "Pending" : "በጥበቃ",
         };
@@ -233,29 +228,29 @@ export default function HomeScreen() {
         console.log("3. Navigating to welcome screen...");
         router.replace("/(auth)/welcome");
       }, 100);
-    } catch (error) {
-      console.error(" Logout error:", error);
+    } catch (error: any) {
+      console.error("Logout error:", error);
       Alert.alert("Error", "Logout failed: " + error.message);
     }
   };
 
   const statsCards = [
     {
-      icon: "water-outline",
+      icon: "water-outline" as const,
       label: t("reportsSubmitted"),
       value: stats.total.toString(),
       color: "#3B82F6",
       gradient: ["#3B82F6", "#60A5FA"],
     },
     {
-      icon: "checkmark-done-outline",
+      icon: "checkmark-done-outline" as const,
       label: t("issuesResolved"),
       value: stats.resolved.toString(),
       color: "#10B981",
       gradient: ["#10B981", "#34D399"],
     },
     {
-      icon: "time-outline",
+      icon: "time-outline" as const,
       label: t("pendingIssues"),
       value: (stats.pending + stats.inProgress).toString(),
       color: "#F59E0B",
