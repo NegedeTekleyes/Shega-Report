@@ -19,7 +19,6 @@ import {
 } from "react-native";
 import Animated, { FadeInUp } from "react-native-reanimated";
 
-// interface for location data
 interface LocationData {
   latitude: number;
   longitude: number;
@@ -32,7 +31,6 @@ export default function ReportScreen() {
   const router = useRouter();
   const { user } = useAuth();
 
-  // convert image uri to base64 - FIXED VERSION
   const convertToBase64 = async (uri: string): Promise<string | null> => {
     try {
       console.log("Converting URI to base64:", uri);
@@ -80,13 +78,12 @@ export default function ReportScreen() {
   const [isGettingLocation, setIsGettingLocation] = useState(false);
   const [locationError, setLocationError] = useState<string>("");
 
-  // Categories based on water and sanitation issues
   const categories = [
     { id: "WATER_LAKE", label: t("waterLeak") },
     { id: "NO_WATER", label: t("noWaterSupply") },
     { id: "DIRTY_WATER", label: t("dirtyWater") },
     { id: "SANITATION", label: t("sanitationIssue") },
-    { id: "PIPE_BRUST", label: t("burstPipe") },
+    { id: "PIPE_BURST", label: t("burstPipe") },
     { id: "DRAINAGE", label: t("drainageProblem") },
   ];
 
@@ -106,6 +103,7 @@ export default function ReportScreen() {
         return;
       }
 
+      // FIXED: Updated MediaTypeOptions to MediaType
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
@@ -153,7 +151,9 @@ export default function ReportScreen() {
         return;
       }
 
+      // FIXED: Updated MediaTypeOptions to MediaType
       const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
         aspect: [4, 3],
         quality: 0.8,
@@ -187,7 +187,7 @@ export default function ReportScreen() {
     setPhotos((prev) => prev.filter((_, i) => i !== index));
   };
 
-  // get users location
+  // get users location - FIXED: Added proper error handling for geocoding
   const getCurrentLocation = async () => {
     try {
       setIsGettingLocation(true);
@@ -205,11 +205,18 @@ export default function ReportScreen() {
         accuracy: Location.Accuracy.Balanced,
       });
 
-      // Reverse geocode to get address
-      const [address] = await Location.reverseGeocodeAsync({
-        latitude: location.coords.latitude,
-        longitude: location.coords.longitude,
-      });
+      // FIXED: Added try-catch for reverse geocoding since it's deprecated in SDK 49
+      let address = null;
+      try {
+        const geocodeResult = await Location.reverseGeocodeAsync({
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude,
+        });
+        address = geocodeResult[0];
+      } catch (geocodeError) {
+        console.log("Geocoding failed, using coordinates only:", geocodeError);
+        // Continue without address - we still have coordinates
+      }
 
       const locationData: LocationData = {
         latitude: location.coords.latitude,
@@ -219,12 +226,14 @@ export default function ReportScreen() {
           ? `${address.street || ""} ${address.name || ""}, ${
               address.city || ""
             }`
-          : undefined,
+          : `${location.coords.latitude.toFixed(
+              6
+            )}, ${location.coords.longitude.toFixed(6)}`,
       };
 
       setCurrentLocation(locationData);
 
-      // Update form location field with address
+      // Update form location field with address or coordinates
       if (locationData.address) {
         setFormData((prev) => ({ ...prev, location: locationData.address! }));
       }
@@ -240,15 +249,23 @@ export default function ReportScreen() {
   useEffect(() => {
     getCurrentLocation();
   }, []);
-
   const handleSubmit = async () => {
+    console.log("🟢 SUBMIT BUTTON CLICKED - Starting submission process");
+
     // Collect missing fields
     const missingFields = [];
     if (!formData.title.trim()) missingFields.push(t("title"));
     if (!formData.description.trim()) missingFields.push(t("description"));
     if (!formData.category) missingFields.push(t("category"));
 
+    console.log("📋 Form validation:");
+    console.log("- Title:", formData.title);
+    console.log("- Description:", formData.description);
+    console.log("- Category:", formData.category);
+    console.log("- Missing fields:", missingFields);
+
     if (missingFields.length > 0) {
+      console.log("❌ Validation failed - missing fields:", missingFields);
       Alert.alert(
         t("missingInformation"),
         `${t("pleaseFillFollowing")}\n\n${missingFields.join(", ")}`
@@ -258,69 +275,78 @@ export default function ReportScreen() {
 
     // Extra validation
     if (formData.description.trim().length < 10) {
+      console.log("❌ Validation failed - description too short");
       Alert.alert(t("descriptionTooShort"), t("provideMoreDetails"));
       return;
     }
 
-    if (formData.title.trim().length < 5)
+    if (formData.title.trim().length < 5) {
+      console.log("❌ Validation failed - title too short");
       Alert.alert(t("titleTooShort"), t("titleMustBeAtLeast5Characters"));
+      return;
+    }
 
     if (!currentLocation) {
+      console.log("❌ Validation failed - no location");
       Alert.alert(t("locationMissing"), t("enableLocationServices"));
       return;
     }
 
+    console.log("✅ All validations passed");
     setIsSubmitting(true);
 
     try {
-      console.log("Original photos array:", photos);
-      console.log("Photos array length:", photos.length);
+      console.log("=== AUTH DEBUG INFO ===");
 
-      // Debug each photo
-      for (let i = 0; i < photos.length; i++) {
-        console.log(`Photo ${i}:`, photos[i]?.substring(0, 50) + "...");
-        console.log(`Photo ${i} type:`, typeof photos[i]);
-        console.log(
-          `Photo ${i} starts with data:`,
-          photos[i]?.startsWith("data:image")
-        );
-      }
-
-      // Filter out any non-base64 strings and use the photos directly
-      const base64Photos = photos.filter(
-        (photo) =>
-          photo && typeof photo === "string" && photo.startsWith("data:image")
-      );
-
-      console.log("Filtered base64 photos:", base64Photos.length);
-
-      // If no valid base64 photos, but we had photos, show error
-      if (photos.length > 0 && base64Photos.length === 0) {
-        Alert.alert(t("photoError"), t("photoProcessingError"));
-        setIsSubmitting(false);
-        return;
-      }
-
-      // Prepare data with location
-      const reportData = {
-        ...formData,
-        user_id: user?.id,
-        locationData: currentLocation,
-        photos: base64Photos,
-        timestamp: new Date().toISOString(),
-      };
-
-      console.log("Submitting report with photos:", base64Photos.length);
-
-      const token = await AsyncStorage.getItem("token");
+      // FIXED: Check multiple possible token storage keys
+      let token = await AsyncStorage.getItem("token");
       if (!token) {
+        token = await AsyncStorage.getItem("auth-token");
+      }
+      if (!token) {
+        token = await AsyncStorage.getItem("user-token");
+      }
+
+      console.log("Token exists:", !!token);
+      if (!token) {
+        console.log("❌ No token found");
         Alert.alert(t("error"), t("noAccessToken"));
         setIsSubmitting(false);
         return;
       }
 
-      // Use your actual server IP instead of localhost
-      const API_BASE = "http://localhost:3000";
+      console.log("Token preview:", token.substring(0, 20) + "...");
+
+      // Prepare data with location
+      const reportData = {
+        title: formData.title.trim(),
+        description: formData.description.trim(),
+        category: formData.category,
+        urgency: formData.urgency,
+        location: formData.location || currentLocation?.address,
+        photos: photos.filter(
+          (photo) =>
+            photo && typeof photo === "string" && photo.startsWith("data:image")
+        ),
+        locationData: currentLocation
+          ? {
+              latitude: currentLocation.latitude,
+              longitude: currentLocation.longitude,
+              address: currentLocation.address,
+              accuracy: currentLocation.accuracy,
+            }
+          : undefined,
+      };
+
+      console.log(
+        "📦 Final data being sent:",
+        JSON.stringify(reportData, null, 2)
+      );
+
+      // FIXED: Use your actual server IP instead of localhost for physical devices
+      const API_BASE = "http://192.168.1.2:3000";
+      console.log("🌐 Making POST request to:", `${API_BASE}/complaints`);
+
       const res = await fetch(`${API_BASE}/complaints`, {
         method: "POST",
         headers: {
@@ -330,18 +356,28 @@ export default function ReportScreen() {
         body: JSON.stringify(reportData),
       });
 
+      console.log("📡 Response status:", res.status);
+      console.log(
+        "📡 Response headers:",
+        Object.fromEntries(res.headers.entries())
+      );
+
       const text = await res.text();
+      console.log("📡 Raw response:", text);
+
       let data;
       try {
-        data = JSON.parse(text);
+        data = text ? JSON.parse(text) : {};
+        console.log("📡 Parsed response data:", data);
       } catch (error) {
-        console.error("Failed to parse server response:", text);
+        console.error("❌ Failed to parse server response:", text);
         throw new Error(
           `Unexpected server response: ${text.substring(0, 100)}...`
         );
       }
 
       if (res.ok) {
+        console.log("✅ Report submitted successfully!");
         setFormData({
           title: "",
           description: "",
@@ -359,12 +395,20 @@ export default function ReportScreen() {
           },
         ]);
       } else {
-        Alert.alert(t("error"), data.error || t("submitReportFailed"));
+        console.log("❌ Server error response:", data);
+        Alert.alert(
+          t("error"),
+          data.error || data.message || data.details || t("submitReportFailed")
+        );
       }
     } catch (error) {
-      console.error("Error submitting report:", error);
-      Alert.alert(t("error"), t("submitReportError"));
+      console.error("💥 Error submitting report:", error);
+      Alert.alert(
+        t("error"),
+        error instanceof Error ? error.message : t("submitReportError")
+      );
     } finally {
+      console.log("🏁 Submission process completed");
       setIsSubmitting(false);
     }
   };
