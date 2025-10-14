@@ -55,24 +55,34 @@ export default function HomeScreen() {
   // Fetch user's report data
   const fetchUserData = async () => {
     try {
+      console.log("=== FETCH USER REPORTS DEBUG ===");
       const token = await AsyncStorage.getItem("token");
-      if (!token || !user?.id) {
-        console.log("No token or user ID found");
+      console.log("Token exists:", !!token);
+      if (token) {
+        console.log("Token Length:", token.length);
+        console.log("Token Preview:", token.substring(0, 20) + "...");
+      }
+      // check user object
+      console.log("User object", user);
+      console.log("User ID:", user?.id);
+      if (!token) {
+        console.log("No token found");
         return;
       }
 
-      const API_BASE = "http://localhost:3000";
+      const API_BASE = "http://192.168.1.2:3000";
+      const url = `${API_BASE}/complaints/my-complaints`;
+      console.log("Fetching from URL:", url);
+      const reportsResponse = await fetch(url, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
 
-      // Fetch user's reports
-      const reportsResponse = await fetch(
-        `${API_BASE}/complaints/my-complaints`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
+      console.log("Response status:", reportsResponse.status);
+      console.log("Response status text:", reportsResponse.statusText);
       if (reportsResponse.ok) {
         const userReports = await reportsResponse.json();
 
