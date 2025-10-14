@@ -1,9 +1,14 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import React, { createContext, ReactNode, useContext, useEffect, useState } from "react";
+import React, {
+  createContext,
+  ReactNode,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 import { Platform } from "react-native";
 
-// -------------------- TYPES --------------------
-export type UserRole = 'resident' | 'technician';
+export type UserRole = "resident" | "technician";
 
 export interface User {
   id: string;
@@ -11,10 +16,12 @@ export interface User {
   name: string;
   role: UserRole;
   isVerified: boolean;
-  profilePhoto?: string
-  // add technicial-specific properties if needed
-  specialization?: string
-  phoneNumber?: string
+  location: string;
+  profilePhoto?: string;
+  phone: string;
+  photoURL: string;
+  specialization?: string;
+  phoneNumber?: string;
 }
 
 interface AuthContextProps {
@@ -22,22 +29,34 @@ interface AuthContextProps {
   isLoading: boolean;
   isAuthenticated: boolean;
   login: (user: User, token: string) => void;
-  logout: () => void;
+  logout: () => Promise<void>;
+  updateUserProfile: (updates: Partial<User>) => void;
 }
 
 // -------------------- STORAGE --------------------
 const storage = {
   setItem: async (key: string, value: string) => {
-    if (Platform.OS === "web") localStorage.setItem(key, value);
-    else await Promise.resolve(); // replace with secure storage if needed
+    if (Platform.OS === "web") {
+      localStorage.setItem(key, value);
+    } else {
+      await AsyncStorage.setItem(key, value);
+    }
   },
+
   getItem: async (key: string) => {
-    if (Platform.OS === "web") return localStorage.getItem(key);
-    else return null;
+    if (Platform.OS === "web") {
+      return localStorage.getItem(key);
+    } else {
+      return await AsyncStorage.getItem(key);
+    }
   },
+
   removeItem: async (key: string) => {
-    if (Platform.OS === "web") localStorage.removeItem(key);
-    else await Promise.resolve();
+    if (Platform.OS === "web") {
+      localStorage.removeItem(key);
+    } else {
+      await AsyncStorage.removeItem(key);
+    }
   },
 };
 
@@ -54,31 +73,71 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const loadStoredAuth = async () => {
-    const storedUser = await storage.getItem("user");
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
+    try {
+      setIsLoading(true);
+      const [storedUser, storedToken] = await Promise.all([
+        storage.getItem("user"),
+        storage.getItem("token"),
+      ]);
+
+      if (storedUser && storedToken) {
+        setUser(JSON.parse(storedUser));
+      }
+    } catch (error) {
+      console.error("Error loading stored auth:", error);
+      // Clear corrupted storage
+      await clearStorage();
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
   const login = async (userData: User, token: string) => {
-    setUser(userData);
-    await storage.setItem("user", JSON.stringify(userData));
-    await storage.setItem("token", token);
+    try {
+      await Promise.all([
+        storage.setItem("user", JSON.stringify(userData)),
+        storage.setItem("token", token),
+      ]);
+      setUser(userData);
+    } catch (error) {
+      console.error("Login storage error:", error);
+      throw error;
+    }
   };
 
   const logout = async () => {
     try {
-      await AsyncStorage.removeItem("authToken")
+      // Clear all auth-related storage
+      await clearStorage();
       setUser(null);
     } catch (error) {
-      console.error("Logout Failed", error)
-      throw error
+      console.error("Logout Failed", error);
+      throw error;
     }
-    // await storage.removeItem("user");
-    // await storage.removeItem("token");
   };
- 
+
+  const clearStorage = async () => {
+    try {
+      await Promise.all([
+        storage.removeItem("user"),
+        storage.removeItem("token"),
+        storage.removeItem("authToken"), // Remove any legacy items
+      ]);
+    } catch (error) {
+      console.error("Error clearing storage:", error);
+    }
+  };
+
+  const updateUserProfile = async (updates: Partial<User>) => {
+    if (!user) throw new Error("No user logged in");
+
+    const updatedUser = { ...user, ...updates };
+    setUser(updatedUser);
+
+    // Update storage
+    await storage.setItem("user", JSON.stringify(updatedUser));
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -87,11 +146,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         isAuthenticated: !!user,
         login,
         logout,
+        updateUserProfile,
       }}
     >
       {children}
     </AuthContext.Provider>
   );
+};
+
+// Role based navigation
+export const getRoleBasedRedirect = (role: string) => {
+  switch (role) {
+    case "technician":
+      return "/(technician)";
+    default:
+      return "/(tabs)";
+  }
 };
 
 // -------------------- HOOK --------------------
