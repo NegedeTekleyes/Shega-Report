@@ -250,7 +250,7 @@ export default function ReportScreen() {
     getCurrentLocation();
   }, []);
   const handleSubmit = async () => {
-    console.log("🟢 SUBMIT BUTTON CLICKED - Starting submission process");
+    console.log("SUBMIT BUTTON CLICKED - Starting submission process");
 
     // Collect missing fields
     const missingFields = [];
@@ -344,7 +344,7 @@ export default function ReportScreen() {
       );
 
       // FIXED: Use your actual server IP instead of localhost for physical devices
-      const API_BASE = "http://192.168.1.2:3000";
+      const API_BASE = "http://192.168.1.3:3000";
       console.log("🌐 Making POST request to:", `${API_BASE}/complaints`);
 
       const res = await fetch(`${API_BASE}/complaints`, {
@@ -395,7 +395,7 @@ export default function ReportScreen() {
           },
         ]);
       } else {
-        console.log("❌ Server error response:", data);
+        console.log(" Server error response:", data);
         Alert.alert(
           t("error"),
           data.error || data.message || data.details || t("submitReportFailed")
