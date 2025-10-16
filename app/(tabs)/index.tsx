@@ -65,7 +65,7 @@ export default function HomeScreen() {
         return;
       }
 
-      const API_BASE = "http://192.168.1.2:3000";
+      const API_BASE = "http://192.168.1.3:3000";
       const url = `${API_BASE}/complaints/my-complaints`;
       console.log("Fetching from URL:", url);
 
