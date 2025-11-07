@@ -4,7 +4,7 @@ import React from "react";
 import { StyleSheet, View } from "react-native";
 
 export default function AuthLayout() {
-  const { language, changeLanguage, t } = useLanguage();
+  const {t } = useLanguage();
   return (
     <View className="flex-1 bg-white">
       <Stack
