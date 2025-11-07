@@ -81,7 +81,7 @@ export default function WelcomeScreen() {
           </View>
 
           {/* Buttons */}
-          <View className="w-full space-y-4 mb-8 bg:hover: #fff">
+          <View className="w-full space-y-4 mb-8 ">
             <TouchableOpacity
               className="bg-white py-5 rounded-2xl items-center "
               onPress={() => router.push("/(auth)/login")}
