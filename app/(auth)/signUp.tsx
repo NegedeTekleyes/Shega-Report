@@ -127,7 +127,7 @@ export default function SignUp() {
               {t("fullName")}
             </Text>
             <TextInput
-              className="border border-gray-300 rounded-xl px-4 py-3 text-base"
+              className="border border-gray-300 rounded-xl px-4 py-3 text-base text-white"
               placeholder={t("enterFullName")}
               value={fullName}
               onChangeText={setFullName}
@@ -141,7 +141,7 @@ export default function SignUp() {
               {t("email")}
             </Text>
             <TextInput
-              className="border border-gray-300 rounded-xl px-4 py-3 text-base"
+              className="border border-gray-300 rounded-xl px-4 py-3 text-base text-white"
               placeholder={t("enterEmail")}
               value={email}
               onChangeText={setEmail}
@@ -157,7 +157,7 @@ export default function SignUp() {
               {t("password")}
             </Text>
             <TextInput
-              className="border border-gray-300 rounded-xl px-4 py-3 text-base"
+              className="border border-gray-300 rounded-xl px-4 py-3 text-base text-white"
               placeholder={t("enterPassword")}
               value={password}
               onChangeText={setPassword}
@@ -172,7 +172,7 @@ export default function SignUp() {
               {t("confirmPassword")}
             </Text>
             <TextInput
-              className="border border-gray-300 rounded-xl px-4 py-3 text-base"
+              className="border border-gray-300 rounded-xl px-4 py-3 text-base text-white"
               placeholder={t("confirmPassword")}
               value={confirmPassword}
               onChangeText={setConfirmPassword}
