@@ -3,24 +3,26 @@ import { LanguageProvider } from "@/providers/language-providers";
 import { Stack, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
+import "../global.css";
 
 // Component to handle routing based on user role
 function RootLayoutContent() {
   const { user, isLoading } = useAuth();
   const router = useRouter();
   const [redirected, setRedirected] = useState(false);
+
   useEffect(() => {
     if (!isLoading && !redirected) {
       console.log("Auth state:", { user, isLoading, redirected });
       if (!user) {
-        //  No user redirect to welco e auth
+        // No user redirect to welcome auth
         router.replace("/(auth)/welcome");
         setRedirected(true);
       } else if (user.role === "technician") {
         router.replace("/(technician)/dashboard");
         setRedirected(true);
       } else {
-        // regular users -redirect to tabs
+        // regular users - redirect to tabs
         router.replace("/(tabs)");
         setRedirected(true);
       }
@@ -29,12 +31,12 @@ function RootLayoutContent() {
 
   if (isLoading) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <ActivityIndicator size="large" />
+      <View className="flex-1 justify-center items-center bg-white">
+        <ActivityIndicator size="large" color="#3b82f6" />
       </View>
     );
   }
-  // render empty stack while redirecting
+
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(auth)" />
