@@ -316,7 +316,7 @@ export default function HomeScreen() {
       {/* Header with Gradient */}
       <LinearGradient
         colors={["#0a5398ff", "#15bdc6ff"]}
-        className="px-6 pt-12 pb-8 rounded-b-3xl"
+        className="px-6 pt-12"
       >
         <View className="flex-row justify-between items-center mb-6">
           <View>
@@ -410,22 +410,22 @@ export default function HomeScreen() {
           {t("overview")}
         </Text>
 
-        <View className="flex-row justify-between mb-6 -mx-1.5">
+        <View className="flex-row space-x-2 justify-between mb-6">
           {statsCards.map((stat, index) => (
             <Animated.View
               key={stat.label}
               entering={FadeInDown.delay(300 + index * 100)}
-              className="w-[31%] mx-1.5 mb-3"
+              className="w-[12%] mb-4"
             >
               <LinearGradient
                 colors={stat.gradient}
-                className="p-4 rounded-2xl shadow-lg aspect-square min-h-[120px]"
+                className="p-4 rounded-2xl shadow-lg aspect-square min-h-[100px]"
               >
                 <View className="items-center justify-center h-full">
-                  <View className="w-12 h-12 bg-white/20 rounded-full justify-center items-center mb-2">
+                  <View className="w-10 h-10 bg-white/20 rounded-full justify-center items-center mb-2">
                     <Ionicons name={stat.icon} size={24} color="white" />
                   </View>
-                  <Text className="text-white text-2xl font-bold">
+                  <Text className="text-white text-xl font-bold">
                     {stat.value}
                   </Text>
                   <Text className="text-white/90 text-xs text-center mt-1">
@@ -447,25 +447,25 @@ export default function HomeScreen() {
             <Animated.View
               key={action.label}
               entering={FadeInUp.delay(500 + index * 100)}
-              className="w-[48%] mb-4"
+              className="w-[48%] mb-3"
             >
               <TouchableOpacity
                 onPress={() => router.push(action.screen as any)}
-                className="bg-white p-5 rounded-2xl shadow-lg border border-gray-100 active:scale-95"
+                className="bg-white p-3 rounded-xl shadow-sm border border-gray-100 active:scale-95 mb-4"
               >
                 <View className="items-center">
                   <LinearGradient
                     colors={action.gradient}
                     style={{
-                      width: 56,
-                      height: 56,
-                      borderRadius: 16,
+                      width: 40,
+                      height: 40,
+                      borderRadius: 12,
                       justifyContent: "center",
                       alignItems: "center",
-                      marginBottom: 12,
+                      marginBottom: 8,
                     }}
                   >
-                    <Ionicons name={action.icon} size={28} color="white" />
+                    <Ionicons name={action.icon} size={20} color="white" />
                   </LinearGradient>
                 </View>
                 <Text className="text-gray-800 font-semibold text-center text-sm">
