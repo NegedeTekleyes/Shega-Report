@@ -186,7 +186,7 @@ export default function Login() {
                 <Ionicons name="mail-outline" size={20} color="gray" />
               </View>
               <TextInput
-                className="flex-1 border border-gray-300 rounded-xl pl-10 pr-3 py-3 text-base"
+                className="flex-1 border border-gray-300 rounded-xl pl-10 pr-3 py-3 text-base text-white"
                 placeholder={t("enterEmail")}
                 value={email}
                 onChangeText={setEmail}
@@ -207,7 +207,7 @@ export default function Login() {
                 <Ionicons name="lock-closed-outline" size={20} color="gray" />
               </View>
               <TextInput
-                className="flex-1 border border-gray-300 rounded-xl pl-10 pr-10 py-3 text-base"
+                className="flex-1 border border-gray-300 rounded-xl pl-10 pr-10 py-3 text-base text-white"
                 placeholder={t("enterPassword")}
                 value={password}
                 onChangeText={setPassword}
