@@ -79,7 +79,15 @@ export default function Login() {
         await AsyncStorage.setItem("token", data.access_token);
         login(data.user, data.access_token);
         Alert.alert(t("loginSuccess"), `${t("welcome")} ${data.user.name}!`);
-        router.replace("/(tabs)");
+        // router.replace("/(tabs)");
+        if (
+          data.user.role === "TECHNICIAN" ||
+          data.user.role === "TECHNICIAN"
+        ) {
+          router.replace("/(technician)");
+        } else {
+          router.replace("/(tabs)");
+        }
       } else {
         setError(data.message || data.error || t("loginError"));
       }
@@ -140,19 +148,23 @@ export default function Login() {
   };
   return (
     <LinearGradient
-      colors={["#0a5398ff", "#15bdc6ff"]}
+      colors={["#0a5a8fff", "#2a2d2dff"]}
       style={{ flex: 1, justifyContent: "center" }}
     >
       <View className="flex-1 justify-center items-center px-6">
-        {/* Logo */}
         <Animated.View
           entering={FadeInUp.delay(100)}
-          className="items-center mb-8"
+          // className="items-center mb-8"
+          className=" rounded-2xl w-full p-4 shadow-lg"
         >
-          <Ionicons name="water-outline" size={64} color="white" />
-          <Text className="italic text-2xl font-semibold mt-2 text-white">
-            ShegaReport
-          </Text>
+          <View className="items-center mb-4">
+            <Animated.View entering={FadeInUp.delay(300)}>
+              <Ionicons name="water-outline" size={64} color="white" />
+            </Animated.View>
+            <Text className="italic text-2xl font-semibold mt-2 text-white">
+              ShegaReport
+            </Text>
+          </View>
         </Animated.View>
 
         {/* Form */}
@@ -165,7 +177,7 @@ export default function Login() {
           </Text>
 
           {/* Email Input */}
-          <View className="mb-4">
+          <View className="mb-2 ">
             <Text className="text-gray-700 mb-2 font-semibold">
               {t("email")}
             </Text>
@@ -236,80 +248,44 @@ export default function Login() {
           ) : null}
 
           {/* Login Button */}
-          <Pressable
-            onPressIn={() => !isLoading && (scale.value = withSpring(0.95))}
-            onPressOut={() => !isLoading && (scale.value = withSpring(1))}
-            onPress={handleLogin}
-            disabled={isLoading}
-          >
-            <Animated.View
-              style={animatedStyle}
-              className={`py-3 rounded-xl items-center mb-4 ${
-                isLoading ? "bg-green-400" : "bg-green-600"
-              }`}
-            >
-              <Text className="text-white font-semibold text-lg">
-                {isLoading ? t("loading") + "..." : t("login")}
-              </Text>
-            </Animated.View>
-          </Pressable>
-
-          {/* Redirect to Signup */}
-          <Pressable
-            onPress={() => !isLoading && router.push("/(auth)/signup")}
-            disabled={isLoading}
-            className="items-center"
-          >
-            <Text
-              className={`${isLoading ? "text-gray-400" : "text-gray-600"}`}
-            >
-              {t("dontHaveAccount")}{" "}
-              <Text
-                className={
-                  isLoading ? "text-green-400" : "text-green-600 font-semibold"
-                }
-              >
-                {t("register")}
-              </Text>
-            </Text>
-          </Pressable>
-          {/* Redirect to Signup */}
-          <Pressable
-            onPress={() => !isLoading && router.push("/(auth)/signup")}
-            disabled={isLoading}
-            className="items-center"
-          >
-            <Text
-              className={`${isLoading ? "text-gray-400" : "text-gray-600"}`}
-            >
-              {t("dontHaveAccount")}{" "}
-              <Text
-                className={
-                  isLoading ? "text-green-400" : "text-green-600 font-semibold"
-                }
-              >
-                {t("register")}
-              </Text>
-            </Text>
-          </Pressable>
-
-          {/* DEVELOPMENT ONLY: Test Reset Password Screen */}
-          {__DEV__ && (
+          <View className="items-center w-full mt-6">
             <Pressable
-              onPress={() => {
-                // Use the token from your backend console log
-                const testToken =
-                  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjIsImVtYWlsIjoiYWJ1dHVAZ21haWwuY29tIiwidHlwZSI6InBhc3N3b3JkX3Jlc2V0IiwiaWF0IjoxNzU5MTM1MzEyLCJleHAiOjE3NTkxMzg5MTJ9.yHE2PpX-pHXQ213ngIu0NLs3p3g-qWA74DZzpzQXO1g";
-                router.push(`/(auth)/reset-password?token=${testToken}`);
-              }}
+              onPressIn={() => !isLoading && (scale.value = withSpring(0.95))}
+              onPressOut={() => !isLoading && (scale.value = withSpring(1))}
+              onPress={handleLogin}
               disabled={isLoading}
-              className="items-center mt-4 p-2 border border-green-600 rounded-lg"
             >
-              <Text className="text-green-600 font-semibold text-sm">
-                DEV: Test Reset Screen
-              </Text>
+              <Animated.View
+                style={animatedStyle}
+                className={`py-3 rounded-xl items-center mb-4 ${
+                  isLoading ? "bg-green-400" : "bg-green-600"
+                }`}
+              >
+                <Text className="text-white font-semibold text-lg">
+                  {isLoading ? t("loading") + "..." : t("login")}
+                </Text>
+              </Animated.View>
             </Pressable>
-          )}
+          </View>
+          {/* Redirect to Signup */}
+          <Pressable
+            onPress={() => !isLoading && router.push("/(auth)/signup")}
+            disabled={isLoading}
+            className="items-center"
+          >
+            <Text
+              className={`${isLoading ? "text-gray-400" : "text-gray-600"}`}
+            >
+              {t("dontHaveAccount")}{" "}
+              <Text
+                className={
+                  isLoading ? "text-green-400" : "text-green-600 font-semibold"
+                }
+              >
+                {t("register")}
+              </Text>
+            </Text>
+          </Pressable>
         </Animated.View>
       </View>
 
