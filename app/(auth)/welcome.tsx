@@ -95,7 +95,7 @@ export default function WelcomeScreen() {
             </TouchableOpacity>
 
             <TouchableOpacity
-              className="border-2 border-white/50 bg-white/10 py-5 rounded-2xl items-center"
+              className="border-2 mt-4 border-white/50 bg-white/10 py-5 rounded-2xl items-center"
               onPress={() => router.push("/(auth)/signup")}
             >
               <View className="flex-row items-center">
