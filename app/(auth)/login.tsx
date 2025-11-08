@@ -14,6 +14,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, {
   FadeInUp,
   useAnimatedStyle,
@@ -26,8 +27,9 @@ const isValidEmail = (email: string): boolean => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email);
 };
+
 export default function Login() {
-  const { t } = useLanguage();
+  const { t, language, changeLanguage } = useLanguage();
   const { login } = useAuth();
   const router = useRouter();
 
@@ -43,6 +45,7 @@ export default function Login() {
   const [forgotPasswordEmail, setForgotPasswordEmail] = useState("");
   const [isSendingReset, setIsSendingReset] = useState(false);
   const [resetSent, setResetSent] = useState(false);
+
   // Animation setup
   const scale = useSharedValue(1);
   const animatedStyle = useAnimatedStyle(() => ({
@@ -68,7 +71,6 @@ export default function Login() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: email.trim().toLowerCase(),
-
           password: password,
         }),
       });
@@ -79,11 +81,11 @@ export default function Login() {
         await AsyncStorage.setItem("token", data.access_token);
         login(data.user, data.access_token);
         Alert.alert(t("loginSuccess"), `${t("welcome")} ${data.user.name}!`);
-        // router.replace("/(tabs)");
-        if (
-          data.user.role === "TECHNICIAN" ||
-          data.user.role === "TECHNICIAN"
-        ) {
+        
+        // Debug role check
+        console.log("User role:", data.user.role);
+        
+        if (data.user.role === "TECHNICIAN") {
           router.replace("/(technician)");
         } else {
           router.replace("/(tabs)");
@@ -146,230 +148,243 @@ export default function Login() {
     setForgotPasswordEmail("");
     setResetSent(false);
   };
+
   return (
-    <LinearGradient
-      colors={["#0a5a8fff", "#2a2d2dff"]}
-      style={{ flex: 1, justifyContent: "center" }}
-    >
-      <View className="flex-1 justify-center items-center px-6">
-        <Animated.View
-          entering={FadeInUp.delay(100)}
-          // className="items-center mb-8"
-          className=" rounded-2xl w-full p-4 shadow-lg"
-        >
-          <View className="items-center mb-4">
-            <Animated.View entering={FadeInUp.delay(300)}>
-              <Ionicons name="water-outline" size={64} color="white" />
-            </Animated.View>
-            <Text className="italic text-2xl font-semibold mt-2 text-white">
-              ShegaReport
-            </Text>
-          </View>
-        </Animated.View>
-
-        {/* Form */}
-        <Animated.View
-          entering={FadeInUp.delay(200)}
-          className="bg-gray-200 rounded-2xl w-full p-6 shadow-lg"
-        >
-          <Text className="text-2xl font-bold text-green-600 text-center mb-4">
-            {t("welcomeBack")}
-          </Text>
-
-          {/* Email Input */}
-          <View className="mb-2 ">
-            <Text className="text-gray-700 mb-2 font-semibold">
-              {t("email")}
-            </Text>
-            <View className="flex-row items-center">
-              <View className="absolute left-3 z-10">
-                <Ionicons name="mail-outline" size={20} color="gray" />
-              </View>
-              <TextInput
-                className="flex-1 border border-gray-300 rounded-xl pl-10 pr-3 py-3 text-base text-white"
-                placeholder={t("enterEmail")}
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                editable={!isLoading}
-              />
-            </View>
-          </View>
-
-          {/* Password Input */}
-          <View className="mb-2">
-            <Text className="text-gray-700 mb-2 font-semibold">
-              {t("password")}
-            </Text>
-            <View className="flex-row items-center">
-              <View className="absolute left-3 z-10">
-                <Ionicons name="lock-closed-outline" size={20} color="gray" />
-              </View>
-              <TextInput
-                className="flex-1 border border-gray-300 rounded-xl pl-10 pr-10 py-3 text-base text-white"
-                placeholder={t("enterPassword")}
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry={!showPassword}
-                editable={!isLoading}
-              />
-              <Pressable
-                className="absolute right-3 z-10"
-                onPress={() => setShowPassword(!showPassword)}
-              >
-                <Ionicons
-                  name={showPassword ? "eye-off-outline" : "eye-outline"}
-                  size={20}
-                  color="gray"
-                />
-              </Pressable>
-            </View>
-          </View>
-
-          {/* Forgot Password Link */}
-          <Pressable
-            onPress={() => !isLoading && setForgotPasswordModal(true)}
-            disabled={isLoading}
-            className="mb-4"
+    <LinearGradient colors={["#0a5398", "#15bdc6"]} className="flex-1">
+      <SafeAreaView className="flex-1">
+        {/* Header with Language Button and Back */}
+        <View className="flex-row justify-between items-center px-6 pt-4">
+          <Pressable 
+            onPress={() => router.back()}
+            className="flex-row items-center"
           >
-            <Text
-              className={`text-right ${
-                isLoading ? "text-gray-400" : "text-green-600 font-semibold"
-              }`}
-            >
-              {t("forgotPassword")}?
+            <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
+            <Text className="text-white font-semibold text-base ml-2">
+              {t("back")}
             </Text>
           </Pressable>
 
-          {/* Error */}
-          {error ? (
-            <Text className="text-red-500 mb-4 text-center">{error}</Text>
-          ) : null}
+          <Pressable
+            className="flex-row items-center bg-white/20 px-4 py-2 rounded-full"
+            onPress={() => changeLanguage(language === "en" ? "am" : "en")}
+          >
+            <Ionicons name="globe" size={18} color="#FFFFFF" />
+            <Text className="text-white font-semibold text-base ml-2">
+              {language === "en" ? "አማርኛ" : "English"}
+            </Text>
+          </Pressable>
+        </View>
 
-          {/* Login Button */}
-          <View className="items-center w-full mt-6">
+        <View className="flex-1 justify-center items-center px-6">
+          {/* Logo and Title */}
+          <Animated.View
+            entering={FadeInUp.delay(100)}
+            className="items-center mb-8"
+          >
+            <Animated.View entering={FadeInUp.delay(300)}>
+              <Ionicons name="water-outline" size={64} color="#FFDE00" />
+            </Animated.View>
+            <Text className="italic text-3xl font-bold mt-4 text-white text-center">
+              Shega<Text className="text-[#FFDE00]">Report</Text>
+            </Text>
+            <Text className="text-white/80 text-lg font-medium mt-2 text-center">
+              {t("welcomeBack")}
+            </Text>
+          </Animated.View>
+
+          {/* Form */}
+          <Animated.View
+            entering={FadeInUp.delay(200)}
+            className="bg-white/10 rounded-2xl w-full p-6 border border-white/20"
+          >
+            {/* Email Input */}
+            <View className="mb-4">
+              <Text className="text-white font-semibold text-base mb-3">
+                {t("email")}
+              </Text>
+              <View className="flex-row items-center bg-white/5 border border-white/20 rounded-2xl px-4 py-4">
+                <Ionicons name="mail-outline" size={20} color="#FFFFFF" />
+                <TextInput
+                  className="flex-1 ml-3 text-white text-base"
+                  placeholder={t("enterEmail")}
+                  placeholderTextColor="rgba(255,255,255,0.6)"
+                  value={email}
+                  onChangeText={setEmail}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  editable={!isLoading}
+                />
+              </View>
+            </View>
+
+            {/* Password Input */}
+            <View className="mb-4">
+              <Text className="text-white font-semibold text-base mb-3">
+                {t("password")}
+              </Text>
+              <View className="flex-row items-center bg-white/5 border border-white/20 rounded-2xl px-4 py-4">
+                <Ionicons name="lock-closed-outline" size={20} color="#FFFFFF" />
+                <TextInput
+                  className="flex-1 ml-3 text-white text-base"
+                  placeholder={t("enterPassword")}
+                  placeholderTextColor="rgba(255,255,255,0.6)"
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry={!showPassword}
+                  editable={!isLoading}
+                />
+                <Pressable onPress={() => setShowPassword(!showPassword)}>
+                  <Ionicons
+                    name={showPassword ? "eye-off-outline" : "eye-outline"}
+                    size={20}
+                    color="#FFFFFF"
+                  />
+                </Pressable>
+              </View>
+            </View>
+
+            {/* Forgot Password Link */}
+            <Pressable
+              onPress={() => !isLoading && setForgotPasswordModal(true)}
+              disabled={isLoading}
+              className="mb-6"
+            >
+              <Text className={`text-right ${isLoading ? "text-white/40" : "text-[#FFDE00] font-semibold"}`}>
+                {t("forgotPassword")}?
+              </Text>
+            </Pressable>
+
+            {/* Error Message */}
+            {error ? (
+              <View className="bg-red-400/100 border border-red-500/100 rounded-2xl p-4 mb-4">
+                <Text className="text-white-300 text-center text-sm">{error}</Text>
+              </View>
+            ) : null}
+
+            {/* Login Button */}
             <Pressable
               onPressIn={() => !isLoading && (scale.value = withSpring(0.95))}
               onPressOut={() => !isLoading && (scale.value = withSpring(1))}
               onPress={handleLogin}
               disabled={isLoading}
+              className="w-full"
             >
               <Animated.View
                 style={animatedStyle}
-                className={`py-3 rounded-xl items-center mb-4 ${
-                  isLoading ? "bg-green-400" : "bg-green-600"
+                className={`bg-white py-5 rounded-2xl items-center ${
+                  isLoading ? "opacity-70" : ""
                 }`}
               >
-                <Text className="text-white font-semibold text-lg">
-                  {isLoading ? t("loading") + "..." : t("login")}
-                </Text>
+                {isLoading ? (
+                  <ActivityIndicator color="#0a5398" size="small" />
+                ) : (
+                  <View className="flex-row items-center">
+                    <Ionicons name="log-in" size={24} color="#0a5398" />
+                    <Text className="text-[#0a5398] font-bold text-lg ml-2">
+                      {t("login")}
+                    </Text>
+                  </View>
+                )}
               </Animated.View>
             </Pressable>
-          </View>
-          {/* Redirect to Signup */}
-          <Pressable
-            onPress={() => !isLoading && router.push("/(auth)/signup")}
-            disabled={isLoading}
-            className="items-center"
-          >
-            <Text
-              className={`${isLoading ? "text-gray-400" : "text-gray-600"}`}
-            >
-              {t("dontHaveAccount")}{" "}
-              <Text
-                className={
-                  isLoading ? "text-green-400" : "text-green-600 font-semibold"
-                }
-              >
-                {t("register")}
-              </Text>
-            </Text>
-          </Pressable>
-        </Animated.View>
-      </View>
 
-      {/* Forgot Password Modal */}
-      <Modal
-        visible={forgotPasswordModal}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={closeForgotPasswordModal}
-      >
-        <View className="flex-1 justify-center items-center bg-black/50 px-6">
-          <Animated.View
-            entering={FadeInUp}
-            className="bg-white rounded-2xl w-full p-6 shadow-lg"
-          >
-            <View className="flex-row justify-between items-center mb-4">
-              <Text className="text-xl font-bold text-green-600">
-                {t("forgotPassword")}
+            {/* Signup Redirect */}
+            <View className="flex-row justify-center items-center mt-6">
+              <Text className="text-white/80 text-base">
+                {t("dontHaveAccount")}
               </Text>
               <Pressable
-                onPress={closeForgotPasswordModal}
-                disabled={isSendingReset}
+                onPress={() => !isLoading && router.push("/(auth)/signup")}
+                disabled={isLoading}
+                className="ml-2"
               >
-                <Ionicons name="close-outline" size={24} color="gray" />
+                <Text className={`font-bold text-base ${isLoading ? "text-[#FFDE00]/60" : "text-[#FFDE00]"}`}>
+                  {t("register")}
+                </Text>
               </Pressable>
             </View>
-
-            {resetSent ? (
-              <View className="items-center py-4">
-                <Ionicons name="checkmark-circle" size={64} color="#10B981" />
-                <Text className="text-lg font-semibold text-green-600 mt-2">
-                  {t("resetEmailSent")}
-                </Text>
-                <Text className="text-gray-600 text-center mt-2">
-                  {t("resetEmailInstructions")}
-                </Text>
-              </View>
-            ) : (
-              <>
-                <Text className="text-gray-600 mb-4">
-                  {t("enterEmailToReset")}
-                </Text>
-
-                <View className="mb-4">
-                  <TextInput
-                    className="border border-gray-300 rounded-xl px-4 py-3 text-base mb-4"
-                    placeholder={t("enterEmail")}
-                    value={forgotPasswordEmail}
-                    onChangeText={setForgotPasswordEmail}
-                    autoCapitalize="none"
-                    autoComplete="email"
-                    editable={!isSendingReset}
-                  />
-                  <Pressable
-                    onPress={handleForgotPassword}
-                    disabled={isSendingReset || !forgotPasswordEmail.trim()}
-                    className={`py-3 rounded-xl items-center ${
-                      isSendingReset || !forgotPasswordEmail.trim()
-                        ? "bg-green-400"
-                        : "bg-green-600"
-                    }`}
-                  >
-                    {isSendingReset ? (
-                      <ActivityIndicator color="white" className="mr-2" />
-                    ) : (
-                      <Ionicons
-                        name="send-outline"
-                        size={20}
-                        color="white"
-                        className="mr-2"
-                      />
-                    )}
-                    <Text className="text-white font-semibold text-lg">
-                      {isSendingReset
-                        ? t("sending") + "..."
-                        : t("sendResetLink")}
-                    </Text>
-                  </Pressable>
-                </View>
-              </>
-            )}
           </Animated.View>
         </View>
-      </Modal>
+
+        {/* Forgot Password Modal */}
+        <Modal
+          visible={forgotPasswordModal}
+          animationType="fade"
+          transparent={true}
+          onRequestClose={closeForgotPasswordModal}
+        >
+          <View className="flex-1 justify-center items-center bg-black/70 px-6">
+            <Animated.View
+              entering={FadeInUp}
+              className="bg-[#1a1a2e] rounded-2xl w-full p-6 border border-white/20"
+            >
+              <View className="flex-row justify-between items-center mb-6">
+                <Text className="text-white text-xl font-bold">
+                  {t("forgotPassword")}
+                </Text>
+                <Pressable
+                  onPress={closeForgotPasswordModal}
+                  disabled={isSendingReset}
+                >
+                  <Ionicons name="close-outline" size={24} color="#FFFFFF" />
+                </Pressable>
+              </View>
+              {resetSent ? (
+                <View className="items-center py-4">
+                  <Ionicons name="checkmark-circle" size={64} color="#4ADE80" />
+                  <Text className="text-white text-lg font-semibold mt-4 text-center">
+                    {t("resetEmailSent")}
+                  </Text>
+                  <Text className="text-white/70 text-center mt-2 text-sm">
+                    {t("resetEmailInstructions")}
+                  </Text>
+                </View>
+              ) : (
+                <>
+                  <Text className="text-white/80 text-base mb-6">
+                    {t("enterEmailToReset")}
+                  </Text>
+
+                  <View className="mb-6">
+                    <View className="flex-row items-center bg-white/5 border border-white/20 rounded-2xl px-4 py-4 mb-6">
+                      <Ionicons name="mail-outline" size={20} color="#FFFFFF" />
+                      <TextInput
+                        className="flex-1 ml-3 text-white text-base"
+                        placeholder={t("enterEmail")}
+                        placeholderTextColor="rgba(234, 13, 13, 0.6)"
+                        value={forgotPasswordEmail}
+                        onChangeText={setForgotPasswordEmail}
+                        autoCapitalize="none"
+                        autoComplete="email"
+                        editable={!isSendingReset}
+                      />
+                    </View>
+                    
+                    <Pressable
+                      onPress={handleForgotPassword}
+                      disabled={isSendingReset || !forgotPasswordEmail.trim()}
+                      className={`bg-[#FFDE00] py-5 rounded-2xl items-center ${
+                        isSendingReset || !forgotPasswordEmail.trim() ? "opacity-50" : ""
+                      }`}
+                    >
+                      <View className="flex-row items-center">
+                        {isSendingReset ? (
+                          <ActivityIndicator color="#0a5398" size="small" />
+                        ) : (
+                          <Ionicons name="send-outline" size={20} color="#0a5398" />
+                        )}
+                        <Text className="text-[#0a5398] font-bold text-lg ml-2">
+                          {isSendingReset ? t("sending") + "..." : t("sendResetLink")}
+                        </Text>
+                      </View>
+                    </Pressable>
+                  </View>
+                </>
+              )}
+            </Animated.View>
+          </View>
+        </Modal>
+      </SafeAreaView>
     </LinearGradient>
   );
 }
