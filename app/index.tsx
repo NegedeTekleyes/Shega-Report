@@ -5,7 +5,7 @@ import { Redirect, router } from "expo-router";
 import { Text, TouchableOpacity, View } from "react-native";
 import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
 import LoadingScreen from "../components/loadingScreen";
-import "./global.css";
+// import "../global.css";
 
 export default function Index() {
   const { language, t, changeLanguage } = useLanguage();

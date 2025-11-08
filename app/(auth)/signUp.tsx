@@ -99,19 +99,19 @@ export default function SignUp() {
 
   return (
     <LinearGradient
-      colors={["#0a5398ff", "#15bdc6ff"]}
+      colors={["#0a5a8fff", "#2a2d2dff"]}
       style={{ flex: 1, justifyContent: "center" }}
     >
       <View className="flex-1 justify-center items-center px-6">
         {/* Form Container */}
         <Animated.View
           entering={FadeInUp.delay(200)}
-          className="bg-white rounded-2xl w-full p-6 shadow-lg"
+          className=" rounded-2xl w-full p-6 shadow-lg"
         >
           {/* Header */}
           <View className="items-center mb-6">
             <Animated.View entering={FadeInUp.delay(300)}>
-              <Ionicons name="person-add" size={48} color="#16a34a" />
+              <Ionicons name="person-add" size={48} color="#fff" />
             </Animated.View>
             <Text className="text-2xl font-bold mt-2 text-green-600">
               {t("createAccount")}
@@ -127,7 +127,7 @@ export default function SignUp() {
               {t("fullName")}
             </Text>
             <TextInput
-              className="border border-gray-300 rounded-xl px-4 py-3 text-base"
+              className="border border-gray-300 rounded-xl px-4 py-3 text-base text-white"
               placeholder={t("enterFullName")}
               value={fullName}
               onChangeText={setFullName}
@@ -141,7 +141,7 @@ export default function SignUp() {
               {t("email")}
             </Text>
             <TextInput
-              className="border border-gray-300 rounded-xl px-4 py-3 text-base"
+              className="border border-gray-300 rounded-xl px-4 py-3 text-base text-white"
               placeholder={t("enterEmail")}
               value={email}
               onChangeText={setEmail}
@@ -157,7 +157,7 @@ export default function SignUp() {
               {t("password")}
             </Text>
             <TextInput
-              className="border border-gray-300 rounded-xl px-4 py-3 text-base"
+              className="border border-gray-300 rounded-xl px-4 py-3 text-base text-white"
               placeholder={t("enterPassword")}
               value={password}
               onChangeText={setPassword}
@@ -172,7 +172,7 @@ export default function SignUp() {
               {t("confirmPassword")}
             </Text>
             <TextInput
-              className="border border-gray-300 rounded-xl px-4 py-3 text-base"
+              className="border border-gray-300 rounded-xl px-4 py-3 text-base text-white"
               placeholder={t("confirmPassword")}
               value={confirmPassword}
               onChangeText={setConfirmPassword}
@@ -189,25 +189,27 @@ export default function SignUp() {
           ) : null}
 
           {/* Sign Up Button */}
-          <Animated.View entering={FadeInUp.delay(900)}>
-            <Pressable
-              onPressIn={() => !isLoading && (scale.value = withSpring(0.95))}
-              onPressOut={() => !isLoading && (scale.value = withSpring(1))}
-              onPress={handleSignup}
-              disabled={isLoading}
-            >
-              <Animated.View
-                style={animatedStyle}
-                className={`py-3 rounded-xl items-center mb-4 ${
-                  isLoading ? "bg-green-400" : "bg-green-600"
-                }`}
+          <View className="items-center w-full mt-6">
+            <Animated.View entering={FadeInUp.delay(900)}>
+              <Pressable
+                onPressIn={() => !isLoading && (scale.value = withSpring(0.95))}
+                onPressOut={() => !isLoading && (scale.value = withSpring(1))}
+                onPress={handleSignup}
+                disabled={isLoading}
               >
-                <Text className="text-white font-semibold text-lg">
-                  {isLoading ? t("creatingAccount") + "..." : t("signUp")}
-                </Text>
-              </Animated.View>
-            </Pressable>
-          </Animated.View>
+                <Animated.View
+                  style={animatedStyle}
+                  className={`py-3 rounded-xl items-center mb-4 ${
+                    isLoading ? "bg-green-400" : "bg-green-600"
+                  }`}
+                >
+                  <Text className="text-white font-semibold text-lg">
+                    {isLoading ? t("creatingAccount") + "..." : t("signUp")}
+                  </Text>
+                </Animated.View>
+              </Pressable>
+            </Animated.View>
+          </View>
 
           {/* Redirect to Login */}
           <Animated.View entering={FadeInUp.delay(1000)}>
