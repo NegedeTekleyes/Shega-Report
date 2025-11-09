@@ -81,10 +81,6 @@ export default function Login() {
         await AsyncStorage.setItem("token", data.access_token);
         login(data.user, data.access_token);
         Alert.alert(t("loginSuccess"), `${t("welcome")} ${data.user.name}!`);
-        
-        // Debug role check
-        console.log("User role:", data.user.role);
-        
         if (data.user.role === "TECHNICIAN") {
           router.replace("/(technician)");
         } else {
