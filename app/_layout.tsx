@@ -18,8 +18,8 @@ function RootLayoutContent() {
         // No user redirect to welcome auth
         router.replace("/(auth)/welcome");
         setRedirected(true);
-      } else if (user.role === "technician") {
-        router.replace("/(technician)/dashboard");
+      } else if (user.role.toUpperCase() !== "TECHNICIAN") {
+        router.replace("/(technician)");
         setRedirected(true);
       } else {
         // regular users - redirect to tabs
