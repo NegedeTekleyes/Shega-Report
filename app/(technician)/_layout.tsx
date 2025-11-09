@@ -4,7 +4,6 @@ import { Redirect, Stack } from "expo-router";
 export default function TechnicianLayout() {
   const { user } = useAuth();
 
-  // Case-insensitive check
   if (user?.role?.toUpperCase() !== "TECHNICIAN") {
     return <Redirect href="/(auth)/welcome" />;
   }
