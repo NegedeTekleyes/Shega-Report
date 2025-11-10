@@ -21,6 +21,7 @@ import Animated, {
   useSharedValue,
   withSpring,
 } from "react-native-reanimated";
+import { authAPI } from "@/lib/api";
 
 // emailvalidation helper
 const isValidEmail = (email: string): boolean => {
@@ -52,52 +53,95 @@ export default function Login() {
     transform: [{ scale: scale.value }],
   }));
 
+  // const handleLogin = async () => {
+  //   if (!email || !password) {
+  //     setError(t("pleaseEnterBoth"));
+  //     return;
+  //   }
+
+  //   if (!isValidEmail(email)) {
+  //     setError(t("invalidEmailFormat"));
+  //     return;
+  //   }
+  //   setIsLoading(true);
+  //   setError("");
+
+  //   try {
+  //     const res = await fetch("http://192.168.1.2:3000/auth/login", {
+  //       method: "POST",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify({
+  //         email: email.trim().toLowerCase(),
+  //         password: password,
+  //       }),
+  //     });
+
+  //     const data = await res.json();
+
+  //     if (res.ok && data.access_token && data.user) {
+  //       await AsyncStorage.setItem("token", data.access_token);
+  //       login(data.user, data.access_token);
+  //       Alert.alert(t("loginSuccess"), `${t("welcome")} ${data.user.name}!`);
+  //       if (data.user.role === "TECHNICIAN") {
+  //         router.replace("/(technician)");
+  //       } else {
+  //         router.replace("/(tabs)");
+  //       }
+  //     } else {
+  //       setError(data.message || data.error || t("loginError"));
+  //     }
+  //   } catch (error: any) {
+  //     console.error("Login error:", error.message);
+  //     setError(t("networkError") || t("loginError"));
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+ 
+  // };
+
+  // Forgot Password Function
+  
   const handleLogin = async () => {
-    if (!email || !password) {
-      setError(t("pleaseEnterBoth"));
-      return;
-    }
+  if (!email || !password) {
+    setError(t("pleaseEnterBoth"));
+    return;
+  }
 
-    if (!isValidEmail(email)) {
-      setError(t("invalidEmailFormat"));
-      return;
-    }
-    setIsLoading(true);
-    setError("");
+  if (!isValidEmail(email)) {
+    setError(t("invalidEmailFormat"));
+    return;
+  }
+  
+  setIsLoading(true);
+  setError("");
 
-    try {
-      const res = await fetch("http://localhost:3000/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: email.trim().toLowerCase(),
-          password: password,
-        }),
-      });
+  try {
+    // Use your authAPI instead of hardcoded fetch
+    const data = await authAPI.login(email.trim().toLowerCase(), password);
 
-      const data = await res.json();
-
-      if (res.ok && data.access_token && data.user) {
-        await AsyncStorage.setItem("token", data.access_token);
-        login(data.user, data.access_token);
-        Alert.alert(t("loginSuccess"), `${t("welcome")} ${data.user.name}!`);
+    if (data.access_token && data.user) {
+      await AsyncStorage.setItem("token", data.access_token);
+      login(data.user, data.access_token);
+      
+      // Small delay to ensure state is updated
+      setTimeout(() => {
         if (data.user.role === "TECHNICIAN") {
           router.replace("/(technician)");
         } else {
           router.replace("/(tabs)");
         }
-      } else {
-        setError(data.message || data.error || t("loginError"));
-      }
-    } catch (error: any) {
-      console.error("Login error:", error.message);
-      setError(t("networkError") || t("loginError"));
-    } finally {
-      setIsLoading(false);
+      }, 100);
+      
+    } else {
+      setError(data.message || data.error || t("loginError"));
     }
-  };
-
-  // Forgot Password Function
+  } catch (error: any) {
+    console.error("Login error:", error.message);
+    setError(error.message || t("networkError") || t("loginError"));
+  } finally {
+    setIsLoading(false);
+  }
+};
   const handleForgotPassword = async () => {
     const trimmedEmail = forgotPasswordEmail.trim().toLowerCase();
 
