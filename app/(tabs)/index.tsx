@@ -410,12 +410,12 @@ export default function HomeScreen() {
           {t("overview")}
         </Text>
 
-        <View className="flex-row space-x-2 justify-between mb-6">
+        <View className="flex-row justify-between mb-6">
           {statsCards.map((stat, index) => (
             <Animated.View
               key={stat.label}
               entering={FadeInDown.delay(300 + index * 100)}
-              className="w-[12%] mb-4"
+              className="w-[10%] mb-4"
             >
               <LinearGradient
                 colors={stat.gradient}
