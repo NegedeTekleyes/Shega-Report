@@ -30,6 +30,7 @@ export default function ProfileScreen() {
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [editingField, setEditingField] = useState("");
   const [editValue, setEditValue] = useState("");
+  const [menuVisible, setMenuVisible] = useState(false);
 
   // Loading states
   const [isUpdating, setIsUpdating] = useState(false);
@@ -168,21 +169,24 @@ export default function ProfileScreen() {
     }
   };
 
-  const handleLogout = () => {
-    Alert.alert(t("logout"), t("confirmLogout"), [
-      {
-        text: t("cancel"),
-        style: "cancel",
-      },
-      {
-        text: t("logout"),
-        onPress: () => {
-          logout();
+  const handleLogout = async () => {
+      console.log("LOGOUT BUTTON PRESSED");
+      setMenuVisible(false);
+  
+      try {
+        console.log("1. Calling logout function...");
+        await logout();
+        console.log("2. Logout function completed");
+  
+        setTimeout(() => {
+          console.log("3. Navigating to welcome screen...");
           router.replace("/(auth)/welcome");
-        },
-      },
-    ]);
-  };
+        }, 100);
+      } catch (error: any) {
+        console.error("Logout error:", error);
+        Alert.alert("Error", "Logout failed: " + error.message);
+      }
+    };
 
   const getFieldLabel = (field: string) => {
     const labels: { [key: string]: string } = {
