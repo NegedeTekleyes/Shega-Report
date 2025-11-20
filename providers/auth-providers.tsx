@@ -26,6 +26,7 @@ export interface User {
 
 interface AuthContextProps {
   user: User | null;
+  token: string | null
   isLoading: boolean;
   isAuthenticated: boolean;
   login: (user: User, token: string) => void;
@@ -66,6 +67,7 @@ const AuthContext = createContext<AuthContextProps | undefined>(undefined);
 // -------------------- PROVIDER --------------------
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [token, setToken] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -82,6 +84,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (storedUser && storedToken) {
         setUser(JSON.parse(storedUser));
+        setToken(storedToken)
       }
     } catch (error) {
       console.error("Error loading stored auth:", error);
@@ -99,6 +102,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         storage.setItem("token", token),
       ]);
       setUser(userData);
+      setToken(token)
     } catch (error) {
       console.error("Login storage error:", error);
       throw error;
@@ -110,6 +114,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // Clear all auth-related storage
       await clearStorage();
       setUser(null);
+      setToken(null)
     } catch (error) {
       console.error("Logout Failed", error);
       throw error;
@@ -142,6 +147,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     <AuthContext.Provider
       value={{
         user,
+        token,
         isLoading,
         isAuthenticated: !!user,
         login,
