@@ -21,7 +21,7 @@ import Animated, {
   useSharedValue,
   withSpring,
 } from "react-native-reanimated";
-import { authAPI } from "@/lib/api";
+import { apiRequest, authAPI } from "@/lib/api";
 
 // emailvalidation helper
 const isValidEmail = (email: string): boolean => {
@@ -151,30 +151,25 @@ export default function Login() {
     }
     if (!isValidEmail(trimmedEmail)) {
       Alert.alert(t("error"), t("invalidEmailFormat"));
+      return
     }
 
     setIsSendingReset(true);
 
     try {
-      const res = await fetch("http://localhost:3000/auth/forgot-password", {
+      const res = await apiRequest("/auth/forgot-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: trimmedEmail }),
       });
 
-      const data = await res.json();
+      setResetSent(true)
+      setTimeout(()=> {
+        setForgotPasswordModal(false)
+        setResetSent(false)
+        setForgotPasswordEmail("")
+      }, 2000)
 
-      if (res.ok) {
-        setResetSent(true);
-        // auto close modal after 2 seconds
-        setTimeout(() => {
-          setForgotPasswordModal(false);
-          setResetSent(false);
-          setForgotPasswordEmail("");
-        }, 2000);
-      } else {
-        Alert.alert(t("error"), data.error || t("resetEmailError"));
-      }
     } catch (error: any) {
       console.error("Forgot password error:", error.message);
       Alert.alert(t("error"), t("networkError") || "resetEmailError");

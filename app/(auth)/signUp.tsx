@@ -5,7 +5,6 @@ import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   Pressable,
   ScrollView,
   Text,
@@ -19,6 +18,10 @@ import Animated, {
   useSharedValue,
   withSpring,
 } from "react-native-reanimated";
+import { useAuth } from "@/providers/auth-providers";
+import { authAPI } from "@/lib/api";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import Toast from "react-native-toast-message";
 
 const isValidEmail = (email: string): boolean => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -27,9 +30,10 @@ const isValidEmail = (email: string): boolean => {
 
 export default function Signup() {
   const { t, language, changeLanguage } = useLanguage();
+  const { login } = useAuth();
   const router = useRouter();
 
-  // State management
+  // State
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -37,10 +41,11 @@ export default function Signup() {
   const [role, setRole] = useState("RESIDENT");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  // Animation setup
+  // Animation
   const scale = useSharedValue(1);
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
@@ -71,36 +76,47 @@ export default function Signup() {
     setError("");
 
     try {
-      const res = await fetch("http://localhost:3000/auth/signup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: name.trim(),
-          email: email.trim().toLowerCase(),
-          password: password,
-          role: role,
-        }),
+      const data = await authAPI.register({
+        name: name.trim(),
+        email: email.trim().toLowerCase(),
+        password: password,
+        role: role,
       });
 
-      const data = await res.json();
+      console.log("Signup response:", data);
 
-      if (res.ok && data.access_token) {
-        Alert.alert(
-          t("signupSuccess"),
-          t("accountCreatedSuccessfully"),
-          [
-            {
-              text: t("ok"),
-              onPress: () => router.replace("/(auth)/login"),
-            },
-          ]
-        );
+      if (data.access_token && data.user) {
+        await AsyncStorage.setItem("token", data.access_token);
+        login(data.user, data.access_token);
+
+        // Show success toast
+        Toast.show({
+          type: "success",
+          text1: t("signupSuccess"),
+          text2: t("accountCreatedSuccessfully"),
+        });
+
+        // Navigate instantly
+        if (data.user.role === "TECHNICIAN") {
+          router.replace("/(technician)");
+        } else {
+          router.replace("/(tabs)");
+        }
       } else {
-        setError(data.message || data.error || t("signupError"));
+        Toast.show({
+          type: "error",
+          text1: t("signupError"),
+          text2: data.message || data.error || "Something went wrong",
+        });
       }
     } catch (error: any) {
-      console.error("Signup error:", error.message);
-      setError(t("networkError") || t("signupError"));
+      console.error("Signup error:", error);
+
+      Toast.show({
+        type: "error",
+        text1: t("signupError"),
+        text2: error.message || t("networkError"),
+      });
     } finally {
       setIsLoading(false);
     }
@@ -109,16 +125,11 @@ export default function Signup() {
   return (
     <LinearGradient colors={["#0a5398", "#15bdc6"]} className="flex-1">
       <SafeAreaView className="flex-1">
-        {/* Header with Language Button and Back */}
+        {/* Header */}
         <View className="flex-row justify-between items-center px-6 pt-4">
-          <Pressable 
-            onPress={() => router.back()}
-            className="flex-row items-center"
-          >
+          <Pressable onPress={() => router.back()} className="flex-row items-center">
             <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
-            <Text className="text-white font-semibold text-base ml-2">
-              {t("back")}
-            </Text>
+            <Text className="text-white font-semibold text-base ml-2">{t("back")}</Text>
           </Pressable>
 
           <Pressable
@@ -132,17 +143,14 @@ export default function Signup() {
           </Pressable>
         </View>
 
-        <ScrollView 
-          className="flex-1" 
-          contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }}
+        <ScrollView
+          className="flex-1"
+          contentContainerStyle={{ flexGrow: 1, justifyContent: "center" }}
           showsVerticalScrollIndicator={false}
         >
           <View className="flex-1 justify-center items-center px-6 py-8">
-            {/* Logo and Title */}
-            <Animated.View
-              entering={FadeInUp.delay(100)}
-              className="items-center mb-8"
-            >
+            {/* Logo & Title */}
+            <Animated.View entering={FadeInUp.delay(100)} className="items-center mb-8">
               <Animated.View entering={FadeInUp.delay(300)}>
                 <Ionicons name="person-add" size={64} color="#FFDE00" />
               </Animated.View>
@@ -159,7 +167,7 @@ export default function Signup() {
               entering={FadeInUp.delay(200)}
               className="bg-white/10 rounded-2xl w-full p-6 border border-white/20"
             >
-              {/* Name Input */}
+              {/* Name */}
               <View className="mb-4">
                 <Text className="text-white font-semibold text-base mb-3">
                   {t("fullName")}
@@ -177,7 +185,7 @@ export default function Signup() {
                 </View>
               </View>
 
-              {/* Email Input */}
+              {/* Email */}
               <View className="mb-4">
                 <Text className="text-white font-semibold text-base mb-3">
                   {t("email")}
@@ -197,47 +205,9 @@ export default function Signup() {
                 </View>
               </View>
 
-              {/* Role Selection
+              {/* Password */}
               <View className="mb-4">
-                <Text className="text-white font-semibold text-base mb-3">
-                  {t("accountType")}
-                </Text>
-                <View className="flex-row space-x-3">
-                  {[
-                    { value: "RESIDENT", label: t("resident"), icon: "home" },
-                    { value: "TECHNICIAN", label: t("technician"), icon: "construct" },
-                  ].map((roleOption) => (
-                    <Pressable
-                      key={roleOption.value}
-                      onPress={() => setRole(roleOption.value)}
-                      className={`flex-1 flex-row items-center justify-center py-3 rounded-2xl border-2 ${
-                        role === roleOption.value
-                          ? "bg-[#FFDE00] border-[#FFDE00]"
-                          : "bg-white/5 border-white/20"
-                      }`}
-                    >
-                      <Ionicons
-                        name={roleOption.icon}
-                        size={18}
-                        color={role === roleOption.value ? "#0a5398" : "#FFFFFF"}
-                      />
-                      <Text
-                        className={`ml-2 font-semibold text-sm ${
-                          role === roleOption.value ? "text-[#0a5398]" : "text-white"
-                        }`}
-                      >
-                        {roleOption.label}
-                      </Text>
-                    </Pressable>
-                  ))}
-                </View>
-              </View> */}
-
-              {/* Password Input */}
-              <View className="mb-4">
-                <Text className="text-white font-semibold text-base mb-3">
-                  {t("password")}
-                </Text>
+                <Text className="text-white font-semibold text-base mb-3">{t("password")}</Text>
                 <View className="flex-row items-center bg-white/5 border border-white/20 rounded-2xl px-4 py-4">
                   <Ionicons name="lock-closed-outline" size={20} color="#FFFFFF" />
                   <TextInput
@@ -259,7 +229,7 @@ export default function Signup() {
                 </View>
               </View>
 
-              {/* Confirm Password Input */}
+              {/* Confirm Password */}
               <View className="mb-6">
                 <Text className="text-white font-semibold text-base mb-3">
                   {t("confirmPassword")}
@@ -284,13 +254,6 @@ export default function Signup() {
                   </Pressable>
                 </View>
               </View>
-
-              {/* Error Message */}
-              {error ? (
-                <View className="bg-red-400/100 border border-red-500/100 rounded-2xl p-4 mb-4">
-                  <Text className="text-white-300 text-center text-sm">{error}</Text>
-                </View>
-              ) : null}
 
               {/* Signup Button */}
               <Pressable
@@ -329,7 +292,11 @@ export default function Signup() {
                   disabled={isLoading}
                   className="ml-2"
                 >
-                  <Text className={`font-bold text-base ${isLoading ? "text-[#FFDE00]/60" : "text-[#FFDE00]"}`}>
+                  <Text
+                    className={`font-bold text-base ${
+                      isLoading ? "text-[#FFDE00]/60" : "text-[#FFDE00]"
+                    }`}
+                  >
                     {t("login")}
                   </Text>
                 </Pressable>
