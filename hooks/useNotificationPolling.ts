@@ -5,6 +5,7 @@ import Toast from 'react-native-toast-message';
 
 // Get token from storage
 const getTokenFromStorage = async (): Promise<string | null> => {
+
   try {
     if (Platform.OS === "web") {
       return localStorage.getItem("token");
@@ -20,6 +21,32 @@ const getTokenFromStorage = async (): Promise<string | null> => {
 export const useNotificationPolling = () => {
   const [isLoading, setIsLoading] = useState(true);
   const processedIds = useRef<Set<number>>(new Set());
+  const API_BASE_URL = "http://192.168.1.4:3000"
+
+  const markAsRead = async (notificationId: number) => {
+    try {
+      const token = await getTokenFromStorage(); // Get fresh token here
+      if (!token) {
+        console.error('No token available for markAsRead');
+        return;
+      }
+
+      const response = await fetch(`${API_BASE_URL}/notifications/mark-read/${notificationId}`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      console.log('✅ Marked notification as read:', notificationId);
+    } catch (error) {
+      console.error('❌ Error marking as read:', error);
+    }
+  };
 
   useEffect(() => {
     let isMounted = true;
@@ -30,9 +57,7 @@ export const useNotificationPolling = () => {
         const token = await getTokenFromStorage();
         if (!token || !isMounted) return;
 
-        // console.log('🔍 Checking for new notifications...');
-        
-        const response = await fetch('http://10.18.52.47:3000/notifications/my-notifications', {
+        const response = await fetch(`${API_BASE_URL}/notifications/my-notifications`, {
           headers: {
             'Authorization': `Bearer ${token}`,
           },
@@ -41,20 +66,15 @@ export const useNotificationPolling = () => {
         if (response.ok) {
           const notifications = await response.json();
           
-          // Find unread notifications we haven't shown yet
           const newNotifications = notifications.filter((notification: any) => 
             notification.status === 'unread' && 
             !processedIds.current.has(notification.id)
           );
 
-          // Show the most recent new notification
           if (newNotifications.length > 0) {
             const latestNotification = newNotifications[0];
             processedIds.current.add(latestNotification.id);
             
-            console.log('🎯 New notification found:', latestNotification.title);
-            
-            // Show toast notification
             Toast.show({
               type: 'success',
               text1: latestNotification.title || 'New Notification',
@@ -63,14 +83,12 @@ export const useNotificationPolling = () => {
               autoHide: true,
               topOffset: 60,
               onPress: () => {
-                console.log('📱 Notification pressed, marking as read');
-                markAsRead(latestNotification.id, token);
+                markAsRead(latestNotification.id); // ✅ No token parameter
               }
             });
 
-            // Auto-mark as read after 2 seconds (optional)
             setTimeout(() => {
-              markAsRead(latestNotification.id, token);
+              markAsRead(latestNotification.id); // ✅ No token parameter
             }, 3000);
           }
         }
@@ -83,31 +101,14 @@ export const useNotificationPolling = () => {
       }
     };
 
-    // Start polling - check every 15 seconds
-    checkForNewNotifications(); // Check immediately
-    intervalId = setInterval(checkForNewNotifications, 15000); // Then every 15 seconds
+    checkForNewNotifications();
+    intervalId = setInterval(checkForNewNotifications, 15000);
 
     return () => {
       isMounted = false;
-      if (intervalId) {
-        clearInterval(intervalId);
-      }
+      if (intervalId) clearInterval(intervalId);
     };
   }, []);
-
-  const markAsRead = async (notificationId: number, token: string) => {
-    try {
-      await fetch(`http://10.18.52.47:3000/notifications/mark-read/${notificationId}`, {
-        method: 'PATCH',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-      console.log('✅ Marked notification as read:', notificationId);
-    } catch (error) {
-      console.error('Error marking as read:', error);
-    }
-  };
 
   return { isLoading };
 };

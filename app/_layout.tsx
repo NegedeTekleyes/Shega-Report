@@ -12,6 +12,8 @@ function RootLayoutContent() {
   const { user, isLoading } = useAuth();
   const router = useRouter();
   const [redirected, setRedirected] = useState(false);
+
+  // use a stsate to hold the intended intial route
   useNotifications()
 
   useEffect(() => {
@@ -21,7 +23,7 @@ function RootLayoutContent() {
         // No user redirect to welcome auth
         // router.replace("/(auth)/welcome");
         setRedirected(true);
-      } else if (user.role.toUpperCase() !== "TECHNICIAN") {
+      } else if (user.role.toUpperCase() === "TECHNICIAN") {
         router.replace("/(technician)");
         setRedirected(true);
       } else {

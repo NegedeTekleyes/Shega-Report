@@ -28,7 +28,7 @@ export default function PrivacyScreen() {
   const content = privacyContent[language];
 
   return (
-    <View className="flex-1 bg-gray-300">
+    <View className="flex-1 bg-gray-50">
       {/* Header */}
       <View className="bg-[#0a5398ff] px-6 pt-12 pb-4">
         <View className="flex-row items-center mb-4">
@@ -42,7 +42,7 @@ export default function PrivacyScreen() {
       </View>
 
       <ScrollView className="flex-1 px-6 py-6">
-        <View className="bg-[#15bdc6ff] rounded-2xl p-6 shadow-sm">
+        <View className=" rounded-2xl ">
           <Text className="text-xl font-bold text-gray-800 mb-6 text-center">
             {language === 'en' ? 'Privacy Policy' : 'የግላዊነት ፖሊሲ'}
           </Text>

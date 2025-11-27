@@ -314,6 +314,7 @@ export const translations = {
     en: "Failed to process the taken photo",
     am: "የተነሳውን ፎቶ ማስተናገድ አልተቻለም",
   },
+  userNotFound: {en: "User Not Found", am: ""},
   back:{en: "Back", am: "ተመለስ"},
   accountCreatedSuccessfully:{en:"Account created succesfully",am:"መለያ በተሳካ ሁኔታ ተፈጠረ"},
   passwordsDoNotMatch:{en: "Password don't match",am:"የይለፍ ቃላት አልተዛመደም"},
