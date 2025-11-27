@@ -177,7 +177,7 @@ export default function SettingScreen() {
   ];
 
   return (
-    <View className="flex-1 bg-gray-400">
+    <View className="flex-1 bg-gray-50">
       {/* Header */}
       <View className="px-6 pt-12 pb-4 bg-[#0a5398ff]">
         <Text className="text-xl font-bold text-white">{t("settings")}</Text>
