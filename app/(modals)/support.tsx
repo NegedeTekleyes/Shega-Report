@@ -22,7 +22,7 @@ export default function SupportScreen() {
   }
 
   return (
-    <ScrollView className="flex-1 bg-gray-400">
+    <ScrollView className="flex-1 bg-gray-50">
       {/* Header */}       
       <View className="bg-[#0a5398ff] px-6 pt-12 pb-4 shadow-sm">
         <TouchableOpacity onPress={() => router.push("/(tabs)/settings")} className="mr-4">
@@ -135,12 +135,12 @@ export default function SupportScreen() {
         <View className="space-y-3">
           <View className="flex-row justify-between items-center py-2">
             <Text className="text-base text-gray-700">Monday - Friday</Text>
-            <Text className="text-base font-medium text-gray-900">9:00 AM - 6:00 PM</Text>
+            <Text className="text-base font-medium text-gray-900">12:00 AM - 12:00 PM</Text>
           </View>
           
           <View className="flex-row justify-between items-center py-2">
             <Text className="text-base text-gray-700">Saturday</Text>
-            <Text className="text-base font-medium text-gray-900">10:00 AM - 4:00 PM</Text>
+            <Text className="text-base font-medium text-gray-900">2:00 AM - 12:00 PM</Text>
           </View>
           
           <View className="flex-row justify-between items-center py-2">

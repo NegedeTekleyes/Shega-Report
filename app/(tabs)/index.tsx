@@ -383,13 +383,13 @@ export default function HomeScreen() {
           <Text className="text-white text-lg font-semibold mb-1">
             👋 {t("welcome")}, {user?.name}!
           </Text>
-          <Text className="text-green-100 text-sm mb-3">{user?.email}</Text>
-          <View className="flex-row items-center justify-between">
-            <View className={`px-4 py-2 rounded-full ${roleStyles.bg}`}>
-              <Text className={`text-xs font-semibold ${roleStyles.text}`}>
+          {/* <Text className="text-green-100 text-sm mb-3">{user?.email}</Text> */}
+          <View className=" items-center justify-between px-4 py-2">
+            {/* <View className={`px-4 py-2 rounded-full ${roleStyles.bg}`}> */}
+              {/* <Text className={`text-xs font-semibold ${roleStyles.text}`}>
                 {user?.role?.toUpperCase() || "USER"}
-              </Text>
-            </View>
+              </Text> */}
+            {/* </View> */}
             <View className="flex-row items-center">
               <Ionicons name="location" size={14} color="#FFDE00" />
               <Text className="text-yellow-300 text-xs ml-1">Debre Birhan</Text>
@@ -410,12 +410,12 @@ export default function HomeScreen() {
           {t("overview")}
         </Text>
 
-        <View className="flex-row space-x-2 justify-between mb-6">
+        <View className="flex-row justify-between mb-6">
           {statsCards.map((stat, index) => (
             <Animated.View
               key={stat.label}
               entering={FadeInDown.delay(300 + index * 100)}
-              className="w-[12%] mb-4"
+              className="w-[10%] mb-4"
             >
               <LinearGradient
                 colors={stat.gradient}
@@ -548,37 +548,6 @@ export default function HomeScreen() {
             </View>
           )}
         </View>
-
-        {/* Emergency Quick Action */}
-        <Animated.View
-          entering={FadeInUp.delay(900)}
-          className="bg-red-50 rounded-2xl p-5 mb-8 border border-red-200"
-        >
-          <View className="flex-row items-center mb-3">
-            <View className="w-12 h-12 bg-red-100 rounded-full justify-center items-center mr-3">
-              <Ionicons name="warning" size={24} color="#EF4444" />
-            </View>
-            <View className="flex-1">
-              <Text className="text-red-800 font-semibold text-lg">
-                {language === "en" ? "Emergency Issue?" : "አስቸኳይ ችግር?"}
-              </Text>
-              <Text className="text-red-600 text-sm">
-                {language === "en"
-                  ? "Report critical issues immediately"
-                  : "አስቸኳይ ችግሮችን ወዲያውኑ ይለግሱ"}
-              </Text>
-            </View>
-          </View>
-
-          <TouchableOpacity
-            className="bg-red-600 py-3 rounded-xl"
-            onPress={() => router.push("/reports")}
-          >
-            <Text className="text-white font-semibold text-center">
-              {language === "en" ? "Report Emergency" : "አስቸኳይ ሪፖርት"}
-            </Text>
-          </TouchableOpacity>
-        </Animated.View>
       </ScrollView>
     </View>
   );

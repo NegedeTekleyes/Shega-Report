@@ -53,7 +53,7 @@ export default function ReportDetailsScreen() {
         return;
       }
 
-      const API_BASE = "http://localhost:3000";
+      const API_BASE = "http://192.168.1.4:3000";
       const response = await fetch(`${API_BASE}/complaints/${complaintId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
