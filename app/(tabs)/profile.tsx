@@ -198,13 +198,13 @@ export default function ProfileScreen() {
   };
 
   return (
-    <ScrollView className="flex-1 bg-gray-400">
+    <ScrollView className="flex-1 bg-gray-50">
       {/* Header */}
       <Animated.View
         entering={FadeInDown.duration(500)}
-        className="bg-[#0a5398ff] px-6 pt-12 pb-6"
+        className="bg-gray-200 px-6 pt-12 pb-6"
       >
-        <Text className="text-xl font-bold text-white text-center mt-6 mb-6">
+        <Text className="text-xl font-bold text-black text-center mt-6 mb-6">
           {t("myProfile")}
         </Text>
       </Animated.View>
@@ -212,17 +212,17 @@ export default function ProfileScreen() {
       {/* User Info Section */}
       <Animated.View
         entering={FadeInDown.delay(200)}
-        className="bg-gradient-to-br from-[#15bdc6] to-[#0ea5aa] px-6 py-8 mx-6 mt-6 rounded-3xl shadow-lg shadow-[#15bdc6]/20"
+        className="bg-white px-6 py-8 mx-6 mt-6 rounded-3xl shadow-lg border border-gray-200"
       >
         <View className="relative items-center mb-6">
           {profileImage ? (
             <Image
               source={{ uri: profileImage }}
-              className="w-28 h-28 rounded-full border-4 border-white/80 shadow-lg"
+              className="w-28 h-28 rounded-full border-4 border-gray-200 shadow-lg"
             />
           ) : (
-            <View className="w-28 h-28 rounded-full border-4 border-white/80 bg-white/20 justify-center items-center shadow-lg">
-              <Text className="text-4xl font-bold text-white">
+            <View className="w-28 h-28 rounded-full border-4 border-gray-200 bg-gray-300 justify-center items-center shadow-lg">
+              <Text className="text-4xl font-bold text-black">
                 {userName?.charAt(0)?.toUpperCase() || "U"}
               </Text>
             </View>
@@ -231,26 +231,26 @@ export default function ProfileScreen() {
           <TouchableOpacity
             onPress={showImagePickerOptions}
             disabled={isUpdating}
-            className="absolute -bottom-2  bg-white p-2 rounded-full shadow-lg border-2 border-[#15bdc6] active:scale-95"
+            className="absolute -bottom-2  bg-white p-2 rounded-full shadow-lg border border-gray-300 active:scale-95"
           >
             <Ionicons name="camera" size={18} color="#15bdc6" />
           </TouchableOpacity>
         </View>
 
         <View className="items-center">
-          <Text className="text-2xl font-bold text-white text-center mb-1">
+          <Text className="text-2xl font-bold text-black text-center mb-1">
             {userName || t("noName")}
           </Text>
-          <Text className="text-white/80 text-base text-center mb-4">
+          <Text className="text-gray-600 text-base text-center mb-4">
             {userEmail}
           </Text>
 
           {/* User Role Badge */}
           <View
-            className={`px-5 py-2 rounded-full ${roleStyles.bg} bg-white/20 backdrop-blur-sm border border-white/30`}
+            className={`px-5 py-2 rounded-full ${roleStyles.bg} bg-gray-100 border border-gray-300`}
           >
             <Text
-              className={`text-sm font-semibold ${roleStyles.text} text-white`}
+              className={`text-sm font-semibold ${roleStyles.text} text-black`}
             >
               {user?.role?.toUpperCase() || "USER"}
             </Text>
