@@ -53,7 +53,7 @@ export default function WelcomeScreen() {
           <View className="bg-white/10 rounded-2xl p-5 mb-8 w-[90%] border border-white/10 flex-row justify-around items-center">
             <View className="items-center flex-1">
               <Ionicons name="checkmark-circle" size={24} color="#4ADE80" />
-              <Text className="text-white text-lg font-bold mt-2">1.2K+</Text>
+              <Text className="text-white text-lg font-bold mt-2">20+</Text>
               <Text className="text-white/80 text-xs text-center mt-1">
                 {language === "en" ? "Issues Resolved" : "የተፈቱ ችግሮች"}
               </Text>
@@ -63,7 +63,7 @@ export default function WelcomeScreen() {
 
             <View className="items-center flex-1">
               <Ionicons name="people" size={24} color="#9b60fa" />
-              <Text className="text-white text-lg font-bold mt-2">5K+</Text>
+              <Text className="text-white text-lg font-bold mt-2">15+</Text>
               <Text className="text-white/80 text-xs text-center mt-1">
                 {language === "en" ? "Active Users" : "ንቁ ተጠቃሚዎች"}
               </Text>
@@ -95,7 +95,7 @@ export default function WelcomeScreen() {
             </TouchableOpacity>
 
             <TouchableOpacity
-              className="border-2 border-white/50 bg-white/10 py-5 rounded-2xl items-center"
+              className="border-2 mt-4 border-white/50 bg-white/10 py-5 rounded-2xl items-center"
               onPress={() => router.push("/(auth)/signup")}
             >
               <View className="flex-row items-center">

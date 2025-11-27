@@ -1,79 +1,74 @@
-import { useAuth } from "@/providers/auth-providers";
 import { useLanguage } from "@/providers/language-providers";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { router } from "expo-router";
+import { useRouter } from "expo-router";
 import React, { useState } from "react";
-import { Alert, Pressable, Text, TextInput, View } from "react-native";
+import {
+  ActivityIndicator,
+  Pressable,
+  ScrollView,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, {
   FadeInUp,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
 } from "react-native-reanimated";
+import { useAuth } from "@/providers/auth-providers";
+import { authAPI } from "@/lib/api";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import Toast from "react-native-toast-message";
 
-export default function SignUp() {
-  const { t } = useLanguage();
+const isValidEmail = (email: string): boolean => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+};
+
+export default function Signup() {
+  const { t, language, changeLanguage } = useLanguage();
   const { login } = useAuth();
-  const [fullName, setFullName] = useState("");
+  const router = useRouter();
+
+  // State
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [role, setRole] = useState("RESIDENT");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  // animation scale
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  // Animation
   const scale = useSharedValue(1);
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
   }));
 
-  const signUpApi = async (name: string, email: string, password: string) => {
-    try {
-      const response = await fetch("http://localhost:3000/auth/signup", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email,
-          password,
-          role: "RESIDENT", // or dynamic role if you add selection
-          name, // full name mapped to backend `name`
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Signup failed");
-      }
-
-      const data = await response.json();
-      return {
-        success: true,
-        user: data.user,
-        token: data.access_token,
-      };
-    } catch (error: any) {
-      console.error("Signup API Error:", error.message);
-      return {
-        success: false,
-        error: error.message || "Something went wrong",
-      };
-    }
-  };
-
   const handleSignup = async () => {
-    if (!fullName || !email || !password || !confirmPassword) {
-      setError(t("pleaseFillAll"));
+    if (!name || !email || !password || !confirmPassword) {
+      setError(t("pleaseFillAllFields"));
       return;
     }
+
+    if (!isValidEmail(email)) {
+      setError(t("invalidEmailFormat"));
+      return;
+    }
+
+    if (password.length < 6) {
+      setError(t("passwordMinLength"));
+      return;
+    }
+
     if (password !== confirmPassword) {
-      setError(t("passwordsDontMatch"));
-      return;
-    }
-    if (password.length < 8) {
-      setError(t("passwordTooShort"));
+      setError(t("passwordsDoNotMatch"));
       return;
     }
 
@@ -81,161 +76,235 @@ export default function SignUp() {
     setError("");
 
     try {
-      const authResponse = await signUpApi(fullName, email, password);
+      const data = await authAPI.register({
+        name: name.trim(),
+        email: email.trim().toLowerCase(),
+        password: password,
+        role: role,
+      });
 
-      if (authResponse.success && authResponse.user && authResponse.token) {
-        login(authResponse.user, authResponse.token);
-        Alert.alert(t("signupSuccess"), `${t("welcome")} ${fullName}!`);
-        router.replace("/(tabs)");
+      console.log("Signup response:", data);
+
+      if (data.access_token && data.user) {
+        await AsyncStorage.setItem("token", data.access_token);
+        login(data.user, data.access_token);
+
+        // Show success toast
+        Toast.show({
+          type: "success",
+          text1: t("signupSuccess"),
+          text2: t("accountCreatedSuccessfully"),
+        });
+
+        // Navigate instantly
+        if (data.user.role === "TECHNICIAN") {
+          router.replace("/(technician)");
+        } else {
+          router.replace("/(tabs)");
+        }
       } else {
-        setError(authResponse.error || t("signupError"));
+        Toast.show({
+          type: "error",
+          text1: t("signupError"),
+          text2: data.message || data.error || "Something went wrong",
+        });
       }
-    } catch (error) {
-      setError(t("signupError"));
+    } catch (error: any) {
+      console.error("Signup error:", error);
+
+      Toast.show({
+        type: "error",
+        text1: t("signupError"),
+        text2: error.message || t("networkError"),
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <LinearGradient
-      colors={["#0a5a8fff", "#2a2d2dff"]}
-      style={{ flex: 1, justifyContent: "center" }}
-    >
-      <View className="flex-1 justify-center items-center px-6">
-        {/* Form Container */}
-        <Animated.View
-          entering={FadeInUp.delay(200)}
-          className=" rounded-2xl w-full p-6 shadow-lg"
+    <LinearGradient colors={["#0a5398", "#15bdc6"]} className="flex-1">
+      <SafeAreaView className="flex-1">
+        {/* Header */}
+        <View className="flex-row justify-between items-center px-6 pt-4">
+          <Pressable onPress={() => router.back()} className="flex-row items-center">
+            <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
+            <Text className="text-white font-semibold text-base ml-2">{t("back")}</Text>
+          </Pressable>
+
+          <Pressable
+            className="flex-row items-center bg-white/20 px-4 py-2 rounded-full"
+            onPress={() => changeLanguage(language === "en" ? "am" : "en")}
+          >
+            <Ionicons name="globe" size={18} color="#FFFFFF" />
+            <Text className="text-white font-semibold text-base ml-2">
+              {language === "en" ? "አማርኛ" : "English"}
+            </Text>
+          </Pressable>
+        </View>
+
+        <ScrollView
+          className="flex-1"
+          contentContainerStyle={{ flexGrow: 1, justifyContent: "center" }}
+          showsVerticalScrollIndicator={false}
         >
-          {/* Header */}
-          <View className="items-center mb-6">
-            <Animated.View entering={FadeInUp.delay(300)}>
-              <Ionicons name="person-add" size={48} color="#fff" />
+          <View className="flex-1 justify-center items-center px-6 py-8">
+            {/* Logo & Title */}
+            <Animated.View entering={FadeInUp.delay(100)} className="items-center mb-8">
+              <Animated.View entering={FadeInUp.delay(300)}>
+                <Ionicons name="person-add" size={64} color="#FFDE00" />
+              </Animated.View>
+              <Text className="italic text-3xl font-bold mt-4 text-white text-center">
+                Shega<Text className="text-[#FFDE00]">Report</Text>
+              </Text>
+              <Text className="text-white/80 text-lg font-medium mt-2 text-center">
+                {t("createAccount")}
+              </Text>
             </Animated.View>
-            <Text className="text-2xl font-bold mt-2 text-green-600">
-              {t("createAccount")}
-            </Text>
-            <Text className="text-gray-500 text-center mt-1">
-              {t("joinOurCommunity")}
-            </Text>
-          </View>
 
-          {/* Full name */}
-          <Animated.View entering={FadeInUp.delay(400)} className="mb-4">
-            <Text className="text-gray-700 mb-2 font-semibold">
-              {t("fullName")}
-            </Text>
-            <TextInput
-              className="border border-gray-300 rounded-xl px-4 py-3 text-base text-white"
-              placeholder={t("enterFullName")}
-              value={fullName}
-              onChangeText={setFullName}
-              editable={!isLoading}
-            />
-          </Animated.View>
+            {/* Form */}
+            <Animated.View
+              entering={FadeInUp.delay(200)}
+              className="bg-white/10 rounded-2xl w-full p-6 border border-white/20"
+            >
+              {/* Name */}
+              <View className="mb-4">
+                <Text className="text-white font-semibold text-base mb-3">
+                  {t("fullName")}
+                </Text>
+                <View className="flex-row items-center bg-white/5 border border-white/20 rounded-2xl px-4 py-4">
+                  <Ionicons name="person-outline" size={20} color="#FFFFFF" />
+                  <TextInput
+                    className="flex-1 ml-3 text-white text-base"
+                    placeholder={t("enterFullName")}
+                    placeholderTextColor="rgba(255,255,255,0.6)"
+                    value={name}
+                    onChangeText={setName}
+                    editable={!isLoading}
+                  />
+                </View>
+              </View>
 
-          {/* Email */}
-          <Animated.View entering={FadeInUp.delay(500)} className="mb-4">
-            <Text className="text-gray-700 mb-2 font-semibold">
-              {t("email")}
-            </Text>
-            <TextInput
-              className="border border-gray-300 rounded-xl px-4 py-3 text-base text-white"
-              placeholder={t("enterEmail")}
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              editable={!isLoading}
-            />
-          </Animated.View>
+              {/* Email */}
+              <View className="mb-4">
+                <Text className="text-white font-semibold text-base mb-3">
+                  {t("email")}
+                </Text>
+                <View className="flex-row items-center bg-white/5 border border-white/20 rounded-2xl px-4 py-4">
+                  <Ionicons name="mail-outline" size={20} color="#FFFFFF" />
+                  <TextInput
+                    className="flex-1 ml-3 text-white text-base"
+                    placeholder={t("enterEmail")}
+                    placeholderTextColor="rgba(255,255,255,0.6)"
+                    value={email}
+                    onChangeText={setEmail}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    editable={!isLoading}
+                  />
+                </View>
+              </View>
 
-          {/* Password */}
-          <Animated.View entering={FadeInUp.delay(600)} className="mb-4">
-            <Text className="text-gray-700 mb-2 font-semibold">
-              {t("password")}
-            </Text>
-            <TextInput
-              className="border border-gray-300 rounded-xl px-4 py-3 text-base text-white"
-              placeholder={t("enterPassword")}
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-              editable={!isLoading}
-            />
-          </Animated.View>
+              {/* Password */}
+              <View className="mb-4">
+                <Text className="text-white font-semibold text-base mb-3">{t("password")}</Text>
+                <View className="flex-row items-center bg-white/5 border border-white/20 rounded-2xl px-4 py-4">
+                  <Ionicons name="lock-closed-outline" size={20} color="#FFFFFF" />
+                  <TextInput
+                    className="flex-1 ml-3 text-white text-base"
+                    placeholder={t("enterPassword")}
+                    placeholderTextColor="rgba(255,255,255,0.6)"
+                    value={password}
+                    onChangeText={setPassword}
+                    secureTextEntry={!showPassword}
+                    editable={!isLoading}
+                  />
+                  <Pressable onPress={() => setShowPassword(!showPassword)}>
+                    <Ionicons
+                      name={showPassword ? "eye-off-outline" : "eye-outline"}
+                      size={20}
+                      color="#FFFFFF"
+                    />
+                  </Pressable>
+                </View>
+              </View>
 
-          {/* Confirm Password */}
-          <Animated.View entering={FadeInUp.delay(700)} className="mb-6">
-            <Text className="text-gray-700 mb-2 font-semibold">
-              {t("confirmPassword")}
-            </Text>
-            <TextInput
-              className="border border-gray-300 rounded-xl px-4 py-3 text-base text-white"
-              placeholder={t("confirmPassword")}
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-              secureTextEntry
-              editable={!isLoading}
-            />
-          </Animated.View>
+              {/* Confirm Password */}
+              <View className="mb-6">
+                <Text className="text-white font-semibold text-base mb-3">
+                  {t("confirmPassword")}
+                </Text>
+                <View className="flex-row items-center bg-white/5 border border-white/20 rounded-2xl px-4 py-4">
+                  <Ionicons name="lock-closed-outline" size={20} color="#FFFFFF" />
+                  <TextInput
+                    className="flex-1 ml-3 text-white text-base"
+                    placeholder={t("confirmPassword")}
+                    placeholderTextColor="rgba(255,255,255,0.6)"
+                    value={confirmPassword}
+                    onChangeText={setConfirmPassword}
+                    secureTextEntry={!showConfirmPassword}
+                    editable={!isLoading}
+                  />
+                  <Pressable onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
+                    <Ionicons
+                      name={showConfirmPassword ? "eye-off-outline" : "eye-outline"}
+                      size={20}
+                      color="#FFFFFF"
+                    />
+                  </Pressable>
+                </View>
+              </View>
 
-          {/* Error Message */}
-          {error ? (
-            <Animated.View entering={FadeInUp.delay(800)} className="mb-4">
-              <Text className="text-red-500 text-center">{error}</Text>
-            </Animated.View>
-          ) : null}
-
-          {/* Sign Up Button */}
-          <View className="items-center w-full mt-6">
-            <Animated.View entering={FadeInUp.delay(900)}>
+              {/* Signup Button */}
               <Pressable
                 onPressIn={() => !isLoading && (scale.value = withSpring(0.95))}
                 onPressOut={() => !isLoading && (scale.value = withSpring(1))}
                 onPress={handleSignup}
                 disabled={isLoading}
+                className="w-full"
               >
                 <Animated.View
                   style={animatedStyle}
-                  className={`py-3 rounded-xl items-center mb-4 ${
-                    isLoading ? "bg-green-400" : "bg-green-600"
+                  className={`bg-white py-5 rounded-2xl items-center ${
+                    isLoading ? "opacity-70" : ""
                   }`}
                 >
-                  <Text className="text-white font-semibold text-lg">
-                    {isLoading ? t("creatingAccount") + "..." : t("signUp")}
-                  </Text>
+                  {isLoading ? (
+                    <ActivityIndicator color="#0a5398" size="small" />
+                  ) : (
+                    <View className="flex-row items-center">
+                      <Ionicons name="person-add" size={24} color="#0a5398" />
+                      <Text className="text-[#0a5398] font-bold text-lg ml-2">
+                        {t("register")}
+                      </Text>
+                    </View>
+                  )}
                 </Animated.View>
               </Pressable>
+
+              {/* Login Redirect */}
+              <View className="flex-row justify-center items-center mt-6">
+                <Text className="text-white/80 text-base">
+                  {t("alreadyHaveAccount")}
+                </Text>
+                <Pressable
+                  onPress={() => !isLoading && router.push("/(auth)/login")}
+                  disabled={isLoading}
+                  className="ml-2"
+                >
+                  <Text
+                    className={`font-bold text-base ${
+                      isLoading ? "text-[#FFDE00]/60" : "text-[#FFDE00]"
+                    }`}
+                  >
+                    {t("login")}
+                  </Text>
+                </Pressable>
+              </View>
             </Animated.View>
           </View>
-
-          {/* Redirect to Login */}
-          <Animated.View entering={FadeInUp.delay(1000)}>
-            <Pressable
-              onPress={() => !isLoading && router.push("/(auth)/login")}
-              disabled={isLoading}
-              className="items-center"
-            >
-              <Text
-                className={`${isLoading ? "text-gray-400" : "text-gray-600"}`}
-              >
-                {t("alreadyHaveAccount")}{" "}
-                <Text
-                  className={
-                    isLoading
-                      ? "text-green-400"
-                      : "text-green-600 font-semibold"
-                  }
-                >
-                  {t("login")}
-                </Text>
-              </Text>
-            </Pressable>
-          </Animated.View>
-        </Animated.View>
-      </View>
+        </ScrollView>
+      </SafeAreaView>
     </LinearGradient>
   );
 }

@@ -4,6 +4,8 @@ import { Stack, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
 import "../global.css";
+import { useNotifications } from "@/hooks/useNotifications";
+import Toast from "react-native-toast-message";
 
 // Component to handle routing based on user role
 function RootLayoutContent() {
@@ -11,15 +13,18 @@ function RootLayoutContent() {
   const router = useRouter();
   const [redirected, setRedirected] = useState(false);
 
+  // use a stsate to hold the intended intial route
+  useNotifications()
+
   useEffect(() => {
     if (!isLoading && !redirected) {
       console.log("Auth state:", { user, isLoading, redirected });
       if (!user) {
         // No user redirect to welcome auth
-        router.replace("/(auth)/welcome");
+        // router.replace("/(auth)/welcome");
         setRedirected(true);
-      } else if (user.role === "technician") {
-        router.replace("/(technician)/dashboard");
+      } else if (user.role.toUpperCase() === "TECHNICIAN") {
+        router.replace("/(technician)");
         setRedirected(true);
       } else {
         // regular users - redirect to tabs
@@ -38,13 +43,18 @@ function RootLayoutContent() {
   }
 
   return (
+    <>
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(auth)" />
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="(technician)" />
     </Stack>
+    <Toast/>
+    </>
   );
 }
+    
+    
 
 export default function RootLayout() {
   return (

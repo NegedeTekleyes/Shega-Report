@@ -43,7 +43,7 @@ export default function ReportsHistoryScreen() {
       const token = await AsyncStorage.getItem("token");
 
       const response = await fetch(
-        "http://192.168.1.3:3000/complaints/my-complaints?page=1&limit=50",
+        "http://192.168.1.4:3000/complaints/my-complaints?page=1&limit=50",
         {
           method: "GET",
           headers: {

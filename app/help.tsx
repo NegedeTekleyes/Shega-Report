@@ -104,7 +104,7 @@ export default function HelpScreen() {
   const content = faqs[language];
 
   return (
-    <View className="flex-1 bg-gray-400">
+    <View className="flex-1 bg-gray-50">
       {/* Header */}
       <View className="bg-[#0a5398ff] px-6 pt-12 pb-4">
         <View className="flex-row items-center mb-4">
@@ -119,7 +119,7 @@ export default function HelpScreen() {
 
       <ScrollView className="flex-1 px-6 py-6">
         {/* Contact Methods */}
-        <View className="bg-[#15bdc6ff] rounded-2xl p-6 shadow-sm mb-6">
+        <View className=" rounded-2xl p-6  mb-6">
           <Text className="text-xl font-semibold text-gray-800 mb-4">
             {language === "en" ? "Get Help Quickly" : "ፈጣን እርዳታ ያግኙ"}
           </Text>
@@ -143,7 +143,7 @@ export default function HelpScreen() {
         </View>
 
         {/* FAQ Section */}
-        <View className="bg-[#15bdc6ff] rounded-2xl p-6 shadow-sm mb-6">
+        <View className=" rounded-2xl p-6  mb-6">
           <Text className="text-xl font-semibold text-gray-800 mb-4">
             {language === "en"
               ? "Frequently Asked Questions"
@@ -161,7 +161,7 @@ export default function HelpScreen() {
         </View>
 
         {/* Contact Form */}
-        <View className="bg-gray-700 rounded-2xl p-6 shadow-sm">
+        <View className="bg-gray-50 rounded-2xl p-6 ">
           <Text className="text-xl font-semibold text-white mb-4">
             {language === "en" ? "Send us a Message" : "መልእክት ይጻፉ"}
           </Text>
