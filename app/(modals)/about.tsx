@@ -18,7 +18,7 @@ export default function AboutScreen() {
   };
 
   return (
-    <ScrollView className="flex-1 bg-gray-400  ">
+    <ScrollView className="flex-1 bg-gray-50  ">
       {/* Header */}
       <View className="bg-[#0a5398ff]  px-6 py-6 ">
         <TouchableOpacity
@@ -33,7 +33,7 @@ export default function AboutScreen() {
       </View>
 
       {/* App Info Card */}
-      <View className="bg-[#15bdc6ff] mx-6 mt-6 p-6 rounded-xl shadow-sm">
+      <View className=" mx-6 mt-6 p-6 rounded-xl">
         <View className="items-center mb-6">
           <Text className="text-2xl font-bold text-gray-800">ShegaReport</Text>
           <Text className="text-gray-500 mt-1">Version 1.0.0</Text>
@@ -47,7 +47,7 @@ export default function AboutScreen() {
       </View>
 
       {/* Features Section */}
-      <View className="bg-[#15bdc6ff] mx-6 my-6 p-6 rounded-xl shadow-sm">
+      <View className=" mx-6 my-6 p-6 rounded-xl">
         <Text className="text-xl font-bold text-gray-800 mb-4">Features</Text>
 
         <View className="space-y-4">
@@ -101,7 +101,7 @@ export default function AboutScreen() {
       </View>
 
       {/* Team Section */}
-      <View className="bg-[#15bdc6ff] mx-6 my-6 p-6 rounded-xl shadow-sm">
+      <View className=" mx-6 my-6 p-6 rounded-xl">
         <Text className="text-xl font-bold text-gray-800 mb-4">Our Team</Text>
 
         <View className="space-y-4">
@@ -109,7 +109,7 @@ export default function AboutScreen() {
             <View className="w-14 h-14 bg-[#0a5398ff] rounded-full items-center justify-center mr-4">
               <Text className="text-white font-bold text-lg">NT</Text>
             </View>
-            <View className="flex-1">
+            <View className="flex-1 px-6">
               <Text className="font-medium text-gray-800">Negede Tekleyes</Text>
               <Text className="text-gray-600">Lead Developer</Text>
             </View>
@@ -119,7 +119,7 @@ export default function AboutScreen() {
             <View className="w-14 h-14 bg-[#0a5398ff] rounded-full items-center justify-center mr-4">
               <Text className="text-white font-bold text-lg">TT</Text>
             </View>
-            <View className="flex-1">
+            <View className="flex-1 px-6">
               <Text className="font-medium text-gray-800">Tewolde Tesfaye</Text>
               <Text className="text-gray-600">Lead Developer</Text>
             </View>
@@ -129,7 +129,7 @@ export default function AboutScreen() {
             <View className="w-14 h-14 bg-[#0a5398ff] rounded-full items-center justify-center mr-4">
               <Text className="text-white font-bold text-lg">ME</Text>
             </View>
-            <View className="flex-1">
+            <View className="flex-1 px-6">
               <Text className="font-medium text-gray-800">Mekasha Eshetu</Text>
               <Text className="text-gray-600">UI/UX Designer</Text>
             </View>
@@ -138,7 +138,7 @@ export default function AboutScreen() {
             <View className="w-14 h-14 bg-[#0a5398ff] rounded-full items-center justify-center mr-4">
               <Text className="text-white font-bold text-lg">GG</Text>
             </View>
-            <View className="flex-1">
+            <View className="flex-1 px-6">
               <Text className="font-medium text-gray-800">Genet Gebeyehu</Text>
               <Text className="text-gray-600">System Analyst</Text>
             </View>
@@ -147,7 +147,7 @@ export default function AboutScreen() {
             <View className="w-14 h-14 bg-[#0a5398ff] rounded-full items-center justify-center mr-4">
               <Text className="text-white font-bold text-lg">FS</Text>
             </View>
-            <View className="flex-1">
+            <View className="flex-1 px-6">
               <Text className="font-medium text-gray-800">Fikru Siyum</Text>
               <Text className="text-gray-600">Tester</Text>
             </View>
@@ -156,7 +156,7 @@ export default function AboutScreen() {
       </View>
 
       {/* Contact & Links */}
-      <View className="bg-[#15bdc6ff] mx-6 my-6 p-6 rounded-xl shadow-sm">
+      <View className=" mx-6 my-6 p-6 rounded-xl ">
         <Text className="text-xl font-bold text-gray-800 mb-4">
           Contact & Links
         </Text>
@@ -217,7 +217,7 @@ export default function AboutScreen() {
       </View>
 
       {/* Legal Section */}
-      <View className="bg-[#15bdc6ff] mx-6 mb-8 p-6 rounded-xl shadow-sm">
+      <View className=" mx-6 mb-8 p-6 rounded-xl">
         <Text className="text-xl font-bold text-gray-800 mb-4">Legal</Text>
 
         <View className="space-y-4">
