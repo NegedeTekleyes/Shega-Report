@@ -1,94 +1,127 @@
 import { useLanguage } from "@/providers/language-providers";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   Alert,
   RefreshControl,
   ScrollView,
-  Switch,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
 import Animated, { FadeInUp } from "react-native-reanimated";
+import { io, Socket } from "socket.io-client";
+import { apiRequest } from "@/lib/api";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-// type script interface
+const SOCKET_URL = "http://192.168.1.4:3000";
+
 interface Notification {
   id: string;
   type: string;
   title: string;
   message: string;
-  time: Date;
+  createdAt: Date;
   read: boolean;
   priority: string;
 }
-interface NotificationSettings {
-  issueUpdates: boolean;
-  newIssuesNearby: boolean;
-  resolutions: boolean;
-  systemAlerts: boolean;
-  emergencyAlerts: boolean;
-}
 
-// Mock notification data
-const mockNotifications = [
-  {
-    id: "1",
-    type: "issue_update",
-    title: "Water Leak Report Updated",
-    message:
-      "Your water leak report in Kebele 03 has been assigned to a technician",
-    time: new Date(Date.now() - 30 * 60 * 1000), // 30 minutes ago
-    read: false,
-    priority: "high",
-  },
-  {
-    id: "2",
-    type: "new_issue",
-    title: "New Water Issue Nearby",
-    message: "A new water outage has been reported in your area (Kebele 01)",
-    time: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
-    read: true,
-    priority: "medium",
-  },
-  {
-    id: "3",
-    type: "resolution",
-    title: "Issue Resolved",
-    message:
-      "The pipe leakage issue in Kebele 02 has been successfully resolved",
-    time: new Date(Date.now() - 5 * 60 * 60 * 1000), // 5 hours ago
-    read: true,
-    priority: "medium",
-  },
-  {
-    id: "4",
-    type: "system",
-    title: "Maintenance Notice",
-    message: "Scheduled water maintenance in Central Area on Saturday 10AM-2PM",
-    time: new Date(Date.now() - 24 * 60 * 60 * 1000), // 1 day ago
-    read: true,
-    priority: "low",
-  },
-];
 export default function NotificationScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const { language } = useLanguage();
   const router = useRouter();
-  const [notifications, setNotifications] = useState(mockNotifications);
-  const [notificationSettings, setNotificationSettings] = useState({
-    issueUpdates: true,
-    newIssuesNearby: true,
-    resolutions: true,
-    systemAlerts: true,
-    emergencyAlerts: true,
-  });
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+
+  // FETCH NOTIFICATIONS
+  const fetchNotifications = useCallback(async () => {
+    try {
+      console.log("Loading notifications...");
+      const data = await apiRequest<Notification[]>(
+        "/notifications/my-notifications",
+        true
+      );
+
+      setNotifications(
+        data.map((n: { id: string; createdAt: string | number | Date; }) => ({
+          ...n,
+          id: n.id || `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, // Ensure unique ID
+          createdAt: new Date(n.createdAt),
+        }))
+      );
+    } catch (error) {
+      console.log("❌ Failed to load notifications:", error);
+    }
+  }, []);
+
+  // LOAD TOKEN FOR AUTH & CONNECT SOCKET
+  useEffect(() => {
+    let socket: Socket;
+
+    const connectSocket = async () => {
+      const token = await AsyncStorage.getItem("token");
+
+      if (!token) {
+        console.log("No token found → cannot connect to socket");
+        return;
+      }
+
+      console.log("Connecting WebSocket with token");
+
+      socket = io(SOCKET_URL, {
+        transports: ["websocket"],
+        auth: {
+          token: token,
+        },
+      });
+
+      socket.on("connect", () => {
+        console.log("✅ Connected to Notifications WebSocket");
+      });
+
+      socket.on("connect_error", (err) => {
+        console.log("❌ Socket connection error:", err.message);
+      });
+
+      socket.on("new-notification", (data) => {
+        console.log("🔥 Received new notification:", data);
+
+        // Create unique ID to prevent duplicate keys
+        const uniqueId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        
+        setNotifications((prev) => [
+          {
+            id: uniqueId,
+            ...data,
+            createdAt: new Date(),
+            read: false,
+          },
+          ...prev,
+        ]);
+      });
+
+      socket.on("disconnect", () => {
+        console.log("🔌 Disconnected from WebSocket");
+      });
+    };
+
+    fetchNotifications();
+    connectSocket();
+
+    // Cleanup function
+    return () => {
+      if (socket) {
+        socket.disconnect();
+      }
+    };
+  }, [fetchNotifications]);
+
   const markAsRead = (id: string) => {
     setNotifications((prev) =>
       prev.map((notif) => (notif.id === id ? { ...notif, read: true } : notif))
     );
   };
+
   const markAllAsRead = () => {
     setNotifications((prev) => prev.map((notif) => ({ ...notif, read: true })));
   };
@@ -97,13 +130,10 @@ export default function NotificationScreen() {
     Alert.alert(
       language === "en" ? "Clear All Notifications" : "ሁሉንም ማስታወቂያዎች አጥፋ",
       language === "en"
-        ? "Are you sure you want to clear all notifications?"
-        : "ሁሉንም ማስታወቂያዎች ማጥፋት ይፈልጋሉ?",
+        ? "Are you sure?"
+        : "በትክክል ሁሉንም ማጥፋት ይፈልጋሉ?",
       [
-        {
-          text: language === "en" ? "Cancel" : "ሰርዝ",
-          style: "cancel",
-        },
+        { text: language === "en" ? "Cancel" : "ተው", style: "cancel" },
         {
           text: language === "en" ? "Clear All" : "ሁሉንም አጥፋ",
           style: "destructive",
@@ -111,29 +141,20 @@ export default function NotificationScreen() {
         },
       ]
     );
-    setNotifications([]);
   };
 
   const onRefresh = () => {
     setRefreshing(true);
-    // simulate api call
-    setTimeout(() => {
-      setRefreshing(false);
-    }, 1000);
+    fetchNotifications().finally(() => setRefreshing(false));
   };
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
-      case "issue_update":
-        return { name: "refresh", color: "#0a0303ff" };
-      case "new_issue":
-        return { name: "warning", color: "#100606ff" };
-      case "resolution":
-        return { name: "checkmark-circle", color: "#100606ff" };
-      case "system":
-        return { name: "information", color: "#100606ff" };
-      default:
-        return { name: "notifications", color: "#100606ff" };
+      case "issue_update": return { name: "refresh" as const, color: "#0a0303ff" };
+      case "new_issue": return { name: "warning" as const, color: "#100606ff" };
+      case "resolution": return { name: "checkmark-circle" as const, color: "#100606ff" };
+      case "system": return { name: "information" as const, color: "#100606ff" };
+      default: return { name: "notifications" as const, color: "#100606ff" };
     }
   };
 
@@ -142,17 +163,18 @@ export default function NotificationScreen() {
     const diff = now.getTime() - date.getTime();
     const hours = Math.floor(diff / (1000 * 60 * 60));
     const minutes = Math.floor(diff / (1000 * 60));
+
     if (minutes < 1) return language === "en" ? "Just now" : "አሁን";
-    if (minutes < 60)
-      return `${minutes} ${language === "en" ? "min ago" : "ደቂቃ በፊት"}`;
-    if (hours < 24)
-      return `${hours} ${language === "en" ? "hours ago" : "ሰዓት በፊት"}`;
+    if (minutes < 60) return `${minutes} ${language === "en" ? "min ago" : "ደቂቃ በፊት"}`;
+    if (hours < 24) return `${hours} ${language === "en" ? "hours ago" : "ሰዓት በፊት"}`;
     return date.toLocaleDateString();
   };
 
   const unreadCount = notifications.filter((n) => !n.read).length;
+
   return (
-    <View className="flex-1 bg-gray-400">
+    <View className="flex-1 bg-gray-50">
+      {/* HEADER */}
       <View className="bg-[#0a5398ff] px-6 pt-12 pb-4">
         <View className="flex-row items-center justify-between mb-4">
           <View>
@@ -167,6 +189,7 @@ export default function NotificationScreen() {
                 : "ሁሉም ተነትቷል"}
             </Text>
           </View>
+
           <View className="flex-row space-x-2">
             {unreadCount > 0 && (
               <TouchableOpacity
@@ -187,78 +210,18 @@ export default function NotificationScreen() {
           </View>
         </View>
       </View>
+
+      {/* NOTIFICATION CONTENT */}
       <ScrollView
         className="flex-1 px-4"
         refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            colors={["#0a5398ff"]}
-            tintColor="10B981"
+          <RefreshControl 
+            refreshing={refreshing} 
+            onRefresh={onRefresh} 
+            colors={["#0a5398ff"]} 
           />
         }
       >
-        {/* notification setting */}
-        <View className="bg-[#15bdc6ff] rounded-xl p-4 mt-4 shadow-sm">
-          <Text className="text-lg dont-semibold text-gray-800 mb-3">
-            {language === "en" ? "Notification Settings" : "የማስታወቂያ ቅንብሮች"}
-          </Text>
-          {[
-            {
-              key: "issueUpdates",
-              label: language === "en" ? "Issue Updates" : "የችግር ማዘመኛዎች",
-            },
-            {
-              key: "newIssuesNearby",
-              label:
-                language === "en" ? "New Issues Nearby" : "አዲስ ችግሮች በአካባቢዎ",
-            },
-            {
-              key: "resolutions",
-              label: language === "en" ? "Resolutions" : "ፍትሆች",
-            },
-            {
-              key: "systemAlerts",
-              label: language === "en" ? "System Alerts" : "የስርዓት ማስጠንቀቂያዎች",
-            },
-            {
-              key: "emergencyAlerts",
-              label: language === "en" ? "Emergency Alerts" : "አስቸኳይ ማስጠንቀቂያዎች",
-            },
-          ].map((setting, index) => (
-            <View
-              key={setting.key}
-              className={`flex-row items-center justify-between py-3 ${
-                index < 4 ? "border-b border-gray-100" : ""
-              }`}
-            >
-              <Text className="text-gray-700">{setting.label}</Text>
-              <Switch
-                value={
-                  notificationSettings[
-                    setting.key as keyof NotificationSettings
-                  ]
-                }
-                onValueChange={(value) =>
-                  setNotificationSettings((prev) => ({
-                    ...prev,
-                    [setting.key]: value,
-                  }))
-                }
-                trackColor={{ false: "#6a90c9ff", true: "#07729fff" }}
-                thumbColor={
-                  notificationSettings[
-                    setting.key as keyof NotificationSettings
-                  ]
-                    ? "#ffffff"
-                    : "#f4f3f4"
-                }
-              />
-            </View>
-          ))}
-        </View>
-
-        {/* Notifications List */}
         <View className="mt-4">
           <Text className="text-lg font-semibold text-gray-800 mb-3">
             {language === "en" ? "Recent Notifications" : "የቅርብ ጊዜ ማስታወቂያዎች"}
@@ -272,26 +235,13 @@ export default function NotificationScreen() {
                   ? "No notifications yet"
                   : "እስካሁን ምንም ማስታወቂያዎች የሉም"}
               </Text>
-              <Text className="text-gray-800 text-center mt-2 text-sm">
-                {language === "en"
-                  ? "Important updates about your reports will appear here"
-                  : "ስለ ሪፖርቶችዎ አስፈላጊ ማዘመኛዎች እዚህ ይታያሉ"}
-              </Text>
-              <TouchableOpacity
-                className="mt-4 bg-green-50 px-4 py-2 rounded-full"
-                onPress={() => router.push("/reports")}
-              >
-                <Text className="text-green-600 font-medium">
-                  {language === "en" ? "Report an Issue" : "ችግር ሪፖርት ያድርጉ"}
-                </Text>
-              </TouchableOpacity>
             </View>
           ) : (
             notifications.map((notification, index) => {
               const icon = getNotificationIcon(notification.type);
               return (
                 <Animated.View
-                  key={notification.id}
+                  key={notification.id} 
                   entering={FadeInUp.delay(index * 100)}
                   className={`bg-[#15bdc6ff] rounded-xl p-4 mb-3 shadow-sm ${
                     !notification.read ? "border-l-4 border-green-500" : ""
@@ -311,7 +261,7 @@ export default function NotificationScreen() {
                           {notification.title}
                         </Text>
                         <Text className="text-gray-400 text-xs">
-                          {formatTime(notification.time)}
+                          {formatTime(notification.createdAt)}
                         </Text>
                       </View>
 
